@@ -1,0 +1,6 @@
+src/
+password.txt
+build_kanban.py
+publish.bat
+__pycache__/
+*.pyc
