@@ -67,8 +67,12 @@ header .grow{flex:1}
 .addcard{width:100%;margin-top:4px;font-size:13px;color:var(--mut);background:transparent;border:none;border-radius:8px;padding:7px;cursor:pointer;text-align:left}
 .addcard:hover{background:var(--card)}
 .addcol{flex:0 0 220px;background:transparent;border:1px dashed var(--line);border-radius:14px;color:var(--mut);font-size:14px;padding:14px;cursor:pointer;height:54px}
-.sortghost{opacity:.4}
-.draghandle{cursor:grab;color:var(--mut);opacity:.4;font-size:14px;flex:none}
+.sortghost{opacity:.35}
+.sortchosen{box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.draghandle,.colgrip{cursor:grab;color:var(--mut);opacity:.45;font-size:15px;flex:none;padding:2px;touch-action:none}
+.draghandle:active,.colgrip:active{cursor:grabbing}
+.cardlist{min-height:24px}
+.card{touch-action:pan-y}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60}
 .modalbox{width:100%;max-width:400px;background:var(--card);border-radius:14px;padding:20px}
 .modalbox h2{font-size:16px;margin:0 0 12px}
@@ -249,7 +253,7 @@ function eltodo(td,card){
 function elcol(col){
   const sec=document.createElement("section");sec.className="col";sec.dataset.id=col.id;
   const head=document.createElement("div");head.className="colhead";
-  head.innerHTML='<span class="colname" contenteditable spellcheck="false"></span><span class="ccount"></span><button class="xbtn" title="箱を削除">&times;</button>';
+  head.innerHTML='<span class="colgrip" title="列を移動">&#10303;</span><span class="colname" contenteditable spellcheck="false"></span><span class="ccount"></span><button class="xbtn" title="箱を削除">&times;</button>';
   const cn=head.querySelector(".colname");cn.textContent=col.name;
   cn.addEventListener("blur",e=>{col.name=e.target.textContent.trim()||"無題";markDirty()});
   head.querySelector(".ccount").textContent=col.cards.length;
@@ -272,10 +276,24 @@ function render(){
   setupDrag();
   markDirty();
 }
+let boardSortable=null, cardSortables=[];
 function setupDrag(){
+  if(boardSortable){try{boardSortable.destroy()}catch(e){}boardSortable=null}
+  cardSortables.forEach(s=>{try{s.destroy()}catch(e){}});cardSortables=[];
+  const board=$("#board");
+  boardSortable=new Sortable(board,{group:"cols",draggable:".col",handle:".colgrip",animation:150,ghostClass:"sortghost",chosenClass:"sortchosen",onEnd:syncColsFromDOM});
   document.querySelectorAll(".cardlist").forEach(list=>{
-    new Sortable(list,{group:"cards",animation:140,handle:".draghandle",ghostClass:"sortghost",onEnd:syncFromDOM});
+    cardSortables.push(new Sortable(list,{group:"cards",draggable:".card",animation:150,
+      delay:180,delayOnTouchOnly:true,touchStartThreshold:6,
+      filter:".ttext,.mname,input,button,.pill,.due,.flag,.tdx,.xbtn,.addtodo",preventOnFilter:false,
+      ghostClass:"sortghost",chosenClass:"sortchosen",onEnd:syncFromDOM}));
   });
+}
+function syncColsFromDOM(){
+  const map={};state.columns.forEach(c=>map[c.id]=c);
+  const order=[...$("#board").querySelectorAll(":scope > .col")].map(el=>map[el.dataset.id]).filter(Boolean);
+  if(order.length===state.columns.length)state.columns=order;
+  render();
 }
 function syncFromDOM(){
   const map={};state.columns.forEach(col=>col.cards.forEach(c=>map[c.id]=c));
