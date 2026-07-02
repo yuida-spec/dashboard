@@ -4,3 +4,8 @@ build_kanban.py
 publish.bat
 __pycache__/
 *.pyc
+.secret
+vault_tool.py
+*.bat
+add.json
+additions.json
