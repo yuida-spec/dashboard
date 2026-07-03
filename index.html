@@ -46,6 +46,7 @@ header .grow{flex:1}
 .chip.red{background:var(--redbg);color:var(--red)}
 .chip.amber{background:var(--amberbg);color:var(--amber)}
 .chip.green{background:var(--greenbg);color:var(--green)}
+.chip.gray{background:var(--graybg);color:var(--gray)}
 .status{font-size:11.5px;color:var(--mut);display:flex;align-items:center;gap:4px;white-space:nowrap}
 .status::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gray)}
 .status.dirty::before{background:var(--amber)}.status.ok::before{background:var(--green)}.status.err::before{background:var(--red)}
@@ -80,9 +81,17 @@ header .grow{flex:1}
 .cardlist:empty::after{content:"ここにドラッグ or 下から追加";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11.5px;color:var(--mut);opacity:.7}
 
 /* ---- card ---- */
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:9px;border-left:4px solid var(--gray);box-shadow:var(--shadow);transition:box-shadow .2s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:9px;border-left:4px solid var(--gray);box-shadow:var(--shadow);transition:box-shadow .2s,opacity .25s,filter .25s}
 .card.green{border-left-color:var(--green)}.card.amber{border-left-color:var(--amber)}.card.red{border-left-color:var(--red)}.card.gray{border-left-color:var(--gray)}
 .card{touch-action:pan-y}
+.card.off{opacity:.45;filter:grayscale(.85);border-left-color:var(--gray);background:var(--col)}
+.card.off .mname{text-decoration:none;color:var(--mut)}
+.switch{flex:none;width:30px;height:18px;border-radius:20px;border:none;background:var(--green);position:relative;padding:0;transition:background .2s}
+.switch::after{content:"";position:absolute;top:2px;left:14px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.card.off .switch{background:var(--graybg)}
+.card.off .pill{background:var(--graybg);color:var(--gray)}
+.card.off .switch::after{left:2px}
+.offnote{font-size:11px;color:var(--mut);margin-top:2px}
 .cardhead{display:flex;align-items:center;gap:6px}
 .mname{flex:1;font-size:14.5px;font-weight:600;outline:none;border-radius:6px;padding:4px 4px;min-width:0}
 .mname:focus{background:var(--bg)}
@@ -296,6 +305,7 @@ function change(){render();markDirty()}
 function collectPriorities(){
   const items=[];
   state.columns.forEach(col=>col.cards.forEach(card=>card.todos.forEach(td=>{
+    if(card.off)return;
     if(td.done)return;
     const c=dueCmp(td.due);
     if(td.pri||c===-1||c===0)items.push({card,td,over:c===-1,today:c===0});
@@ -332,12 +342,14 @@ function renderToday(){
 }
 function renderChips(){
   const counts={red:0,amber:0,green:0,gray:0};
-  state.columns.forEach(c=>c.cards.forEach(card=>counts[card.status]++));
+  let off=0;
+  state.columns.forEach(c=>c.cards.forEach(card=>{if(card.off){off++}else{counts[card.status]++}}));
   const el=$("#chips");el.innerHTML="";
   [["red","要対応"],["amber","詰まり"],["green","順調"]].forEach(([k,label])=>{
     if(!counts[k])return;
     const s=document.createElement("span");s.className="chip "+k;s.textContent=label+" "+counts[k];el.appendChild(s);
   });
+  if(off){const s=document.createElement("span");s.className="chip gray";s.textContent="休止 "+off;el.appendChild(s)}
 }
 
 /* ===== board rendering ===== */
@@ -367,15 +379,26 @@ function eltodo(td,card){
   return li;
 }
 function elcard(card,col){
-  const div=document.createElement("div");div.className="card "+card.status;div.dataset.id=card.id;
+  const div=document.createElement("div");div.className="card "+(card.off?"off":card.status);div.dataset.id=card.id;
   const head=document.createElement("div");head.className="cardhead";
-  head.innerHTML='<span class="mname" contenteditable spellcheck="false"></span><button class="pill"></button><button class="xbtn" title="削除" aria-label="カードを削除">&times;</button>';
+  head.innerHTML='<span class="mname" contenteditable spellcheck="false"></span><button class="pill"></button><button class="switch" role="switch"></button><button class="xbtn" title="削除" aria-label="カードを削除">&times;</button>';
   const mn=head.querySelector(".mname");mn.textContent=card.name;
   mn.addEventListener("blur",e=>{card.name=e.target.textContent.trim()||"無題";markDirty();renderToday()});
-  const pill=head.querySelector(".pill");pill.textContent=SLABEL[card.status];pill.title="タップで状態を切替";
-  pill.addEventListener("click",()=>{card.status=STATUSES[(STATUSES.indexOf(card.status)+1)%4];change()});
+  const pill=head.querySelector(".pill");pill.textContent=card.off?"休止中":SLABEL[card.status];pill.title="タップで状態を切替";
+  pill.addEventListener("click",()=>{if(card.off)return;card.status=STATUSES[(STATUSES.indexOf(card.status)+1)%4];change()});
+  const sw=head.querySelector(".switch");
+  sw.title=card.off?"再開する":"休止する（今はほっとく）";
+  sw.setAttribute("aria-checked",card.off?"false":"true");
+  sw.setAttribute("aria-label",card.off?"再開する":"休止する");
+  sw.addEventListener("click",()=>{card.off=!card.off;change()});
   head.querySelector(".xbtn").addEventListener("click",()=>{if(confirm("「"+card.name+"」を削除しますか？")){col.cards=col.cards.filter(c=>c!==card);change()}});
   div.appendChild(head);
+  if(card.off){
+    const n=document.createElement("div");n.className="offnote";
+    const open=card.todos.filter(t=>!t.done).length;
+    n.textContent="休止中"+(open?"（TODO "+open+"件は保持）":"");
+    div.appendChild(n);
+  }
 
   const total=card.todos.length, done=card.todos.filter(t=>t.done).length;
   if(total>0){
@@ -470,7 +493,7 @@ function setupDrag(){
   document.querySelectorAll(".cardlist").forEach(list=>{
     cardSortables.push(new Sortable(list,{group:"cards",draggable:".card",animation:150,
       delay:180,delayOnTouchOnly:true,touchStartThreshold:6,
-      filter:".ttext,.mname,input,button,.pill,.due,.flag,.tdx,.xbtn,.addtodo,.donetoggle",preventOnFilter:false,
+      filter:".ttext,.mname,input,button,.pill,.due,.flag,.tdx,.xbtn,.addtodo,.donetoggle,.switch",preventOnFilter:false,
       ghostClass:"sortghost",chosenClass:"sortchosen",onEnd:syncFromDOM}));
   });
 }
