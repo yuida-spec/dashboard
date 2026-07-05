@@ -350,16 +350,19 @@ function defaultData(){
     {label:"Week 3（抜く）",days:[["m-sq"],["m-mp","m-cj"],["m-sn"],["m-bp","m-pil"],["m-cjh"],["m-rest"],["m-rest"]]},
     {label:"Week 4（抜く）",days:[["m-sq"],["m-mp","m-sn"],["m-cj","m-yoga"],["m-bp","m-pil"],["m-snh"],["m-rest"],["m-rest"]]}
   ]};
-  return {master,templates:[tpl],days:{},settings:{}};
+  return {master,templates:[tpl],days:{},settings:{},routine:null};
 }
 function demoData(){
   const st=defaultData();
   const start=addDays(mondayOf(new Date()),-14);
-  expandInto(st,st.templates[0],ymd(start),false);
   const today=ymd(new Date());
+  // 過去分のみ実データとして展開（今日以降は標準ルーティンの自動反映に任せる）
+  expandInto(st,st.templates[0],ymd(start),false);
   Object.keys(st.days).forEach(ds=>{
-    if(ds<today)st.days[ds].sessions.forEach((s,i)=>{s.done=true;if((i+ds.charCodeAt(9))%4===0&&s.cat!=="休養")s.rpe=Math.min(10,(+s.rpe||0)+1)});
+    if(ds<today){st.days[ds].sessions.forEach((s,i)=>{s.done=true;if((i+ds.charCodeAt(9))%4===0&&s.cat!=="休養")s.rpe=Math.min(10,(+s.rpe||0)+1)});st.days[ds].ov=1}
+    else delete st.days[ds];
   });
+  st.routine={tplId:"tpl1",anchor:ymd(start),matUntil:today};
   return st;
 }
 
@@ -429,10 +432,63 @@ async function save(){
 }
 
 /* ===== data helpers ===== */
-function dayOf(ds){return state.days[ds]}
-function ensureDay(ds){if(!state.days[ds])state.days[ds]={sessions:[],memo:""};return state.days[ds]}
-function cleanDay(ds){const d=state.days[ds];if(d&&!d.sessions.length&&!d.memo)delete state.days[ds]}
+/* 標準ルーティン：state.routine={tplId,anchor(Week1の月曜),matUntil}
+   今日以降の「保存データがない日」にはテンプレのメニューを仮想表示する。
+   触った日だけ materializeDay で実データ化（ov=1）＝その日限りの上書き。
+   過去は rollover で毎日スナップショット確定し、以後のルーティン変更の影響を受けない。 */
+function virtualFor(ds){
+  const r=state.routine;
+  if(!r||!r.tplId||!r.anchor||ds<r.anchor)return [];
+  const tpl=state.templates.find(t=>t.id===r.tplId);
+  if(!tpl||!tpl.weeks.length)return [];
+  const idx=Math.round((parseYmd(ds)-parseYmd(r.anchor))/86400000);
+  if(idx<0)return [];
+  const cyc=tpl.weeks.length*7;
+  const k=idx%cyc, w=Math.floor(k/7), di=k%7;
+  return (tpl.weeks[w].days[di]||[]).map((mid,i)=>{
+    const m=masterById(mid);if(!m)return null;
+    return {id:"v"+ds+"x"+i,mid:m.id,name:m.name,cat:m.cat,rpe:m.rpe,min:m.min,done:false,virtual:true};
+  }).filter(Boolean);
+}
+function dayOf(ds){
+  if(state.days[ds])return state.days[ds];
+  if(ds>=ymd(new Date())){
+    const v=virtualFor(ds);
+    if(v.length)return {sessions:v,memo:"",virtual:true};
+  }
+  return null;
+}
+function materializeDay(ds){
+  if(state.days[ds])return state.days[ds];
+  const v=virtualFor(ds).map(s=>{const c=Object.assign({},s);delete c.virtual;return c});
+  state.days[ds]={sessions:v,memo:""};
+  if(v.length)state.days[ds].ov=1;
+  return state.days[ds];
+}
+function matS(ds,sid){const d=materializeDay(ds);return d.sessions.find(x=>x.id===sid)}
+function ensureDay(ds){return materializeDay(ds)}
+function cleanDay(ds){const d=state.days[ds];if(d&&!d.sessions.length&&!d.memo&&!d.ov)delete state.days[ds]}
 function masterById(mid){return state.master.find(m=>m.id===mid)}
+function rollover(){
+  const r=state.routine;
+  if(!r||!r.tplId||!r.anchor)return;
+  const today=ymd(new Date());
+  if(r.matUntil===today)return;
+  let cur=(r.matUntil&&r.matUntil>r.anchor)?r.matUntil:r.anchor;
+  let d=parseYmd(cur);const t=parseYmd(today);
+  let changed=false,guard=0;
+  while(d<t&&guard++<400){
+    const ds=ymd(d);
+    if(!state.days[ds]){
+      const v=virtualFor(ds).map(s=>{const c=Object.assign({},s);delete c.virtual;return c});
+      if(v.length){state.days[ds]={sessions:v,memo:"",ov:1};changed=true}
+    }
+    d=addDays(d,1);
+  }
+  r.matUntil=today;
+  markDirty();
+  return changed;
+}
 function expandInto(st,tpl,startYmd,clear){
   const start=parseYmd(startYmd);
   tpl.weeks.forEach((wk,wi)=>{
@@ -451,7 +507,7 @@ function expandInto(st,tpl,startYmd,clear){
 
 /* ===== load metrics ===== */
 function effAU(ds,today){
-  const d=state.days[ds];if(!d)return 0;
+  const d=dayOf(ds);if(!d)return 0;
   let sum=0;
   d.sessions.forEach(s=>{
     if(ds<today){if(s.done)sum+=sessAU(s)}
@@ -461,10 +517,12 @@ function effAU(ds,today){
 }
 function buildSeries(){
   const dates=Object.keys(state.days).filter(ds=>state.days[ds].sessions.length).sort();
-  if(!dates.length)return null;
   const today=ymd(new Date());
-  let start=dates[0], end=dates[dates.length-1];
+  const routineOn=!!(state.routine&&state.routine.tplId);
+  if(!dates.length&&!routineOn)return null;
+  let start=dates.length?dates[0]:today, end=dates.length?dates[dates.length-1]:today;
   if(end<today)end=today;
+  if(routineOn){const h=ymd(addDays(new Date(),28));if(end<h)end=h}
   const lim=ymd(addDays(new Date(),-180));
   if(start<lim)start=lim;
   const arr=[];
@@ -487,7 +545,7 @@ function weekStats(monYmd){
   const daily=[];
   for(let i=0;i<7;i++){
     const ds=ymd(addDays(parseYmd(monYmd),i));
-    const d=state.days[ds];let dayAu=0;
+    const d=dayOf(ds);let dayAu=0;
     if(d)d.sessions.forEach(s=>{
       cnt[s.cat]=(cnt[s.cat]||0)+1;
       const au=sessAU(s);plan+=au;
@@ -516,6 +574,7 @@ function switchView(v){
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>switchView(t.dataset.v)));
 
 function render(){
+  rollover();
   $("#viewCal").classList.toggle("hidden",curView!=="cal");
   $("#viewTpl").classList.toggle("hidden",curView!=="tpl");
   $("#viewLoad").classList.toggle("hidden",curView!=="load");
@@ -545,7 +604,7 @@ function renderCal(){
     td.sessions.forEach(s=>{
       const li=document.createElement("li");if(s.done)li.className="done";
       const ck=document.createElement("input");ck.type="checkbox";ck.className="ck2";ck.checked=!!s.done;ck.setAttribute("aria-label","完了");
-      ck.addEventListener("change",()=>{s.done=ck.checked;change()});
+      ck.addEventListener("change",()=>{const ss=matS(today,s.id);if(ss)ss.done=ck.checked;change()});
       const dot=document.createElement("span");dot.className="dotc "+CATCLS[s.cat];
       const nm=document.createElement("span");nm.className="snm";nm.textContent=s.name;
       nm.style.cursor="pointer";nm.addEventListener("click",()=>openDay(today));
@@ -655,9 +714,10 @@ function onSessDrop(evt){
   const sid=evt.item.dataset.sid;
   const fromDs=evt.from.dataset.ds, toDs=evt.to.dataset.ds;
   if(!sid||!fromDs||!toDs)return;
-  const fd=dayOf(fromDs);if(!fd)return;
+  const fd=materializeDay(fromDs);
   const s=fd.sessions.find(x=>x.id===sid);if(!s)return;
   fd.sessions=fd.sessions.filter(x=>x!==s);
+  fd.ov=1;
   const tgt=ensureDay(toDs);
   const idx=Math.min(evt.newIndex!=null?evt.newIndex:tgt.sessions.length,tgt.sessions.length);
   tgt.sessions.splice(idx,0,s);
@@ -683,22 +743,22 @@ function renderSheet(){
     day.sessions.forEach(s=>{
       const row=document.createElement("div");row.className="srow"+(s.done?" done":"");
       const ck=document.createElement("input");ck.type="checkbox";ck.className="ck2";ck.checked=!!s.done;ck.setAttribute("aria-label","完了");
-      ck.addEventListener("change",()=>{s.done=ck.checked;change()});
+      ck.addEventListener("change",()=>{const ss=matS(ds,s.id);if(ss)ss.done=ck.checked;change()});
       const dot=document.createElement("span");dot.className="dotc "+CATCLS[s.cat];
       const nm=document.createElement("span");nm.className="snm";nm.textContent=s.name;
       row.append(ck,dot,nm);
       if(s.cat!=="休養"){
         const rp=document.createElement("input");rp.type="number";rp.min=0;rp.max=10;rp.step=.5;rp.value=s.rpe;rp.title="RPE";rp.setAttribute("aria-label","RPE");
-        rp.addEventListener("change",()=>{s.rpe=+rp.value||0;change()});
+        rp.addEventListener("change",()=>{const ss=matS(ds,s.id);if(ss)ss.rpe=+rp.value||0;change()});
         const mn=document.createElement("input");mn.type="number";mn.min=0;mn.max=300;mn.step=5;mn.value=s.min;mn.title="分";mn.setAttribute("aria-label","分");
-        mn.addEventListener("change",()=>{s.min=+mn.value||0;change()});
+        mn.addEventListener("change",()=>{const ss=matS(ds,s.id);if(ss)ss.min=+mn.value||0;change()});
         const au=document.createElement("span");au.className="aulab";au.textContent=fmtN(sessAU(s))+" AU";
         row.append(rp,mn,au);
       }
       const mv=document.createElement("button");mv.className="mv";mv.textContent="移動";mv.title="別の日へ移動";
       mv.addEventListener("click",()=>openMove(ds,s));
       const x=document.createElement("button");x.className="x2";x.textContent="×";x.setAttribute("aria-label","削除");
-      x.addEventListener("click",()=>{day.sessions=day.sessions.filter(t=>t!==s);cleanDay(ds);change()});
+      x.addEventListener("click",()=>{const sd=materializeDay(ds);sd.sessions=sd.sessions.filter(t=>t.id!==s.id);sd.ov=1;cleanDay(ds);change()});
       row.append(mv,x);
       body.appendChild(row);
     });
@@ -713,12 +773,13 @@ function renderSheet(){
   if(day&&day.sessions.length){
     const tom=document.createElement("button");tom.className="smallbtn";tom.textContent="全て翌日へ ⇢";
     tom.addEventListener("click",()=>{
+      const sd=materializeDay(ds);
       const nx=ensureDay(ymd(addDays(parseYmd(ds),1)));
-      nx.sessions.push(...day.sessions);day.sessions=[];cleanDay(ds);
+      nx.sessions.push(...sd.sessions);sd.sessions=[];sd.ov=1;nx.ov=1;cleanDay(ds);
       openDayStr=ymd(addDays(parseYmd(ds),1));change();
     });
     const clr=document.createElement("button");clr.className="smallbtn warn";clr.textContent="この日をクリア";
-    clr.addEventListener("click",()=>{if(confirm(mdLabel(ds)+" の予定をすべて削除しますか？")){day.sessions=[];cleanDay(ds);change()}});
+    clr.addEventListener("click",()=>{if(confirm(mdLabel(ds)+" の予定をすべて削除しますか？")){const sd=materializeDay(ds);sd.sessions=[];sd.ov=1;cleanDay(ds);change()}});
     acts.append(tom,clr);
   }
   body.appendChild(acts);
@@ -743,9 +804,10 @@ function mvFallback(){
 function doMove(toDs){
   if(!mvCtx)return;
   const {from,sess}=mvCtx;
-  const fd=dayOf(from);if(!fd)return;
-  fd.sessions=fd.sessions.filter(t=>t!==sess);
-  ensureDay(toDs).sessions.push(sess);
+  const fd=materializeDay(from);
+  const s=fd.sessions.find(x=>x.id===sess.id);if(!s){mvCtx=null;return}
+  fd.sessions=fd.sessions.filter(t=>t!==s);fd.ov=1;
+  const td=ensureDay(toDs);td.sessions.push(s);td.ov=1;
   cleanDay(from);openDayStr=toDs;change();mvCtx=null;
 }
 $("#mvInput").addEventListener("change",()=>{const v=$("#mvInput").value;if(v&&mvCtx)doMove(v)});
@@ -817,7 +879,11 @@ function renderTpl(){
   del.addEventListener("click",()=>{
     if(!tpl)return;
     if(state.templates.length<=1){alert("最後のテンプレートは削除できません。");return}
-    if(confirm("「"+tpl.name+"」を削除しますか？")){state.templates=state.templates.filter(t=>t!==tpl);curTplId=state.templates[0].id;change()}
+    const isActive=state.routine&&state.routine.tplId===tpl.id;
+    if(confirm("「"+tpl.name+"」を削除しますか？"+(isActive?"\n（標準ルーティンに設定中のため、カレンダーへの自動反映も解除されます）":""))){
+      if(isActive){rollover();state.routine=null}
+      state.templates=state.templates.filter(t=>t!==tpl);curTplId=state.templates[0].id;change();
+    }
   });
   bar.append(sel,ren,nw,dup,del);
   p1.appendChild(bar);
@@ -863,27 +929,41 @@ function renderTpl(){
     addw.addEventListener("click",()=>{tpl.weeks.push({label:"Week "+(tpl.weeks.length+1),days:[[],[],[],[],[],[],[]]});change()});
     p1.appendChild(addw);
 
-    // 展開
-    const ex=document.createElement("div");ex.className="rowflex";ex.style.cssText="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)";
-    const lbl=document.createElement("span");lbl.style.cssText="font-size:13px;color:var(--mut)";lbl.textContent="開始日（月曜）";
+    // 標準ルーティン（カレンダー自動反映）
+    const r=state.routine;
+    const rWrap=document.createElement("div");rWrap.style.cssText="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)";
+    const info=document.createElement("div");info.style.cssText="font-size:13px;line-height:1.7;margin-bottom:10px";
+    if(r&&r.tplId){
+      const rt=state.templates.find(t=>t.id===r.tplId);
+      info.innerHTML="<b>標準ルーティン：</b>「"+(rt?rt.name:"（削除済み）")+"」を Week 1 = "+mdLabel(r.anchor)+"週 起点で自動反映中。今日以降の空き日にメニューが自動表示されます。<span style='color:var(--mut)'>カレンダー側での組み換え・削除はその日だけに効き、ルーティン本体と過去の日付には影響しません。</span>";
+    }else{
+      info.innerHTML="<b>標準ルーティン：</b>未設定。<span style='color:var(--mut)'>設定すると今日以降のカレンダーにこのルーティンのメニューが自動で入り続けます（サイクルは自動で繰り返し。過去の日付は変わりません）。</span>";
+    }
+    rWrap.appendChild(info);
+    const ex=document.createElement("div");ex.className="rowflex";ex.style.marginBottom="0";
+    const lbl=document.createElement("span");lbl.style.cssText="font-size:13px;color:var(--mut)";lbl.textContent="Week 1 の開始週（月曜）";
     const din=document.createElement("input");din.type="date";
-    din.value=ymd(mondayOf(addDays(new Date(),7)));
-    const ckw=document.createElement("label");ckw.style.cssText="font-size:12.5px;color:var(--mut);display:flex;align-items:center;gap:5px;cursor:pointer";
-    const ck=document.createElement("input");ck.type="checkbox";ck.style.cssText="width:17px;height:17px;accent-color:var(--ink)";
-    ckw.append(ck,document.createTextNode("期間内の既存予定をクリアして展開"));
-    const go=document.createElement("button");go.className="smallbtn pri";go.textContent="カレンダーへ展開 →";
+    din.value=(r&&r.tplId===tpl.id&&r.anchor)?r.anchor:ymd(mondayOf(new Date()));
+    const go=document.createElement("button");go.className="smallbtn pri";
+    go.textContent=(r&&r.tplId===tpl.id)?"起点を更新":"このルーティンを標準にする";
     go.addEventListener("click",()=>{
-      if(!din.value){alert("開始日を選択してください。");return}
-      const d=parseYmd(din.value);
-      if((d.getDay()+6)%7!==0&&!confirm("開始日が月曜ではありません。このまま展開しますか？\n（テンプレの「月」列がこの日に置かれます）"))return;
-      expandInto(state,tpl,din.value,ck.checked);
-      const wks=tpl.weeks.length;
-      calY=d.getFullYear();calM=d.getMonth();
-      change();switchView("cal");
-      setTimeout(()=>alert(tpl.name+" を "+mdLabel(din.value)+" から "+wks+"週分 展開しました。"),50);
+      if(!din.value){alert("Week 1 の開始週を選択してください。");return}
+      rollover();
+      const a=ymd(mondayOf(parseYmd(din.value)));
+      state.routine={tplId:tpl.id,anchor:a,matUntil:ymd(new Date())};
+      change();
+      alert("「"+tpl.name+"」を標準ルーティンにしました。\nWeek 1 = "+mdLabel(a)+"の週として、今日以降のカレンダーに自動反映されます。");
     });
-    ex.append(lbl,din,ckw,go);
-    p1.appendChild(ex);
+    ex.append(lbl,din,go);
+    if(r&&r.tplId){
+      const off=document.createElement("button");off.className="smallbtn warn";off.textContent="自動反映を解除";
+      off.addEventListener("click",()=>{
+        if(confirm("標準ルーティンを解除しますか？\n（過去〜今日の確定済みデータはそのまま残ります）")){rollover();state.routine=null;change()}
+      });
+      ex.appendChild(off);
+    }
+    rWrap.appendChild(ex);
+    p1.appendChild(rWrap);
   }
   root.appendChild(p1);
   setupTplDrag(p1);
@@ -976,7 +1056,7 @@ function renderLoad(){
   const series=buildSeries();
   if(!series){
     const p=document.createElement("div");p.className="panel";
-    p.innerHTML="<h2>データがありません</h2><div style='font-size:13.5px;color:var(--mut)'>「ルーティン」タブでテンプレートをカレンダーへ展開すると、予定から負荷・疲労の見通しが自動計算されます。</div>";
+    p.innerHTML="<h2>データがありません</h2><div style='font-size:13.5px;color:var(--mut)'>「ルーティン」タブで標準ルーティンを設定すると、カレンダーの予定から負荷・疲労の見通しが自動計算されます。</div>";
     root.appendChild(p);return;
   }
   const today=ymd(new Date());
@@ -1189,6 +1269,7 @@ async function doUnlock(vault){
       if(!state.master)state=Object.assign(defaultData(),state);
       if(!state.days)state.days={};
       if(!state.templates||!state.templates.length)state.templates=defaultData().templates;
+      if(state.routine===undefined)state.routine=null;
     }
   }catch(e){err.textContent="エラー: "+e.message;$("#unlockBtn").disabled=false;return}
   showApp();
