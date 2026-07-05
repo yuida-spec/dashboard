@@ -245,8 +245,8 @@ table.wk td:first-child{text-align:left;font-family:var(--sans)}
       <input id="pass2" type="password" autocomplete="off">
     </div>
     <div id="tokenWrap" class="hidden">
-      <label>GitHub アクセストークン（初回のみ）</label>
-      <textarea id="token" placeholder="github_pat_..."></textarea>
+      <label>GitHub アクセストークン（通常は空のままでOK）</label>
+      <textarea id="token" placeholder="空のまま「開く」でダッシュボードから自動引き継ぎ"></textarea>
       <div class="hint" id="tokenHint"></div>
     </div>
     <button class="btn" id="unlockBtn">開く</button>
@@ -402,6 +402,15 @@ async function ghPutVault(vault){
 }
 async function buildVault(){
   return {salt:bytesToB64(SALT), data:await encStr(KEY,state), token:await encStr(KEY,TOKEN)};
+}
+/* ダッシュボードの vault.json からトークンを引き継ぐ（合言葉が同じ場合のみ復号できる） */
+async function inheritToken(pass){
+  const r=await fetch(API+"/contents/vault.json?ref=main&t="+Date.now(),{headers:{"Accept":"application/vnd.github+json"},cache:"no-store"});
+  if(!r.ok)throw new Error("dashboard-vault-missing");
+  const j=await r.json();
+  const v=JSON.parse(b64ToStr(j.content));
+  const k=await deriveKey(pass,b64ToBytes(v.salt));
+  return await decStr(k,v.token);
 }
 function setStatus(t,cls){const s=$("#status");s.textContent=t;s.className="status"+(cls?" "+cls:"")}
 function markDirty(){
@@ -1078,10 +1087,10 @@ async function init(){
   }else{
     isNew=true;
     $("#lockTitle").textContent="初期設定";
-    $("#lockDesc").textContent="初回設定です。合言葉を決め、GitHubトークンを貼り付けてください。";
+    $("#lockDesc").textContent="初回設定です。合言葉を決めてください。";
     $("#pass2Wrap").classList.remove("hidden");
     $("#tokenWrap").classList.remove("hidden");
-    $("#tokenHint").innerHTML="ダッシュボードで使っているトークンが<b>そのまま使えます</b>（同じリポジトリのため）。合言葉で暗号化して保存します。";
+    $("#tokenHint").innerHTML="<b>ダッシュボードと同じ合言葉</b>にすると、トークンは自動で引き継がれるため入力不要です。別の合言葉にしたい場合のみ、GitHubのトークン（Fine-grained / このリポジトリの Contents: Read and write）を貼り付けてください。";
   }
   $("#unlockBtn").addEventListener("click",()=>doUnlock(vault));
   $("#pass").addEventListener("keydown",e=>{if(e.key==="Enter"&&!isNew)doUnlock(vault)});
@@ -1094,8 +1103,11 @@ async function doUnlock(vault){
   try{
     if(isNew){
       if(pass!==$("#pass2").value){err.textContent="合言葉が一致しません。";$("#unlockBtn").disabled=false;return}
-      const tk=$("#token").value.trim();
-      if(!tk){err.textContent="GitHubトークンを貼り付けてください。";$("#unlockBtn").disabled=false;return}
+      let tk=$("#token").value.trim();
+      if(!tk){
+        try{tk=await inheritToken(pass)}
+        catch(e){err.textContent="トークンを自動引き継ぎできませんでした。ダッシュボードと同じ合言葉を使うか、トークンを貼り付けてください。";$("#unlockBtn").disabled=false;return}
+      }
       SALT=crypto.getRandomValues(new Uint8Array(16));
       KEY=await deriveKey(pass,SALT);
       TOKEN=tk; state=defaultData();
