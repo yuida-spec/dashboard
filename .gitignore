@@ -11,3 +11,4 @@ add.json
 additions.json
 icon.svg
 icon.b64
+session_digest.py
