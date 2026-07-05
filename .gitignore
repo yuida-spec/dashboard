@@ -9,3 +9,5 @@ vault_tool.py
 *.bat
 add.json
 additions.json
+icon.svg
+icon.b64
