@@ -98,7 +98,10 @@ header .grow{flex:1}
 .day.today{border-color:var(--red);border-width:1.5px}
 .dnum{font-family:var(--mono);font-size:11px;color:var(--mut);padding:0 2px 2px;display:flex;align-items:center;gap:4px}
 .day.today .dnum{color:var(--red);font-weight:700}
-.chip2{font-size:10px;line-height:1.35;border-radius:4px;padding:1.5px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid;background:var(--bg)}
+.chip2{font-size:10px;line-height:1.35;border-radius:4px;padding:1.5px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid;background:var(--bg);cursor:grab;touch-action:pan-y}
+.sortghost{opacity:.3}
+.sortchosen{box-shadow:var(--shadow-lift);opacity:.95}
+.day.dragover{border-color:var(--mut);background:var(--graybg)}
 .chip2.c-str{border-left-color:var(--red)}.chip2.c-wl{border-left-color:var(--blue)}
 .chip2.c-con{border-left-color:var(--green)}.chip2.c-rest{border-left-color:var(--gray);color:var(--mut)}
 .chip2.done{color:var(--mut);background:transparent}
@@ -132,7 +135,7 @@ input[type=number]{width:64px;font-family:var(--mono)}
 .wkday{border-right:1px solid var(--line);padding:6px 5px 8px;min-height:92px;display:flex;flex-direction:column;gap:3px;min-width:0;overflow:hidden}
 .wkday:last-child{border-right:none}
 .wkdow{font-size:10.5px;color:var(--mut);letter-spacing:.1em;text-align:center;margin-bottom:2px}
-.tchip{font-size:10.5px;border-left:3px solid;border-radius:4px;background:var(--bg);padding:2px 4px;display:flex;align-items:center;gap:3px;line-height:1.3}
+.tchip{font-size:10.5px;border-left:3px solid;border-radius:4px;background:var(--bg);padding:2px 4px;display:flex;align-items:center;gap:3px;line-height:1.3;cursor:grab;touch-action:pan-y}
 .tchip span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tchip button{border:none;background:none;color:var(--mut);font-size:11px;padding:1px 3px;opacity:.5;flex:none}
 .tchip button:hover{opacity:1;color:var(--red)}
@@ -301,6 +304,7 @@ table.wk td:first-child{text-align:left;font-family:var(--sans)}
 
 <input type="date" id="mvInput" tabindex="-1" aria-hidden="true">
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.6/Sortable.min.js"></script>
 <script>
 const REPO="yuida-spec/dashboard";
 const API="https://api.github.com/repos/"+REPO;
@@ -585,7 +589,8 @@ function renderCal(){
       const d=addDays(cur,i);const ds=ymd(d);
       const cell=document.createElement("div");
       cell.className="day"+(d.getMonth()!==calM?" out":"")+(ds===today?" today":"");
-      cell.addEventListener("click",()=>openDay(ds));
+      cell.dataset.ds=ds;
+      cell.addEventListener("click",()=>{if(Date.now()-lastDragAt<350)return;openDay(ds)});
       const dn=document.createElement("div");dn.className="dnum";dn.textContent=d.getDate();
       cell.appendChild(dn);
       const dd=dayOf(ds);
@@ -594,6 +599,7 @@ function renderCal(){
         show.forEach(s=>{
           const c=document.createElement("div");c.className="chip2 "+CATCLS[s.cat]+(s.done?" done":"");
           c.textContent=s.cat==="休養"?"rest":s.name;
+          c.dataset.sid=s.id;
           cell.appendChild(c);
         });
         if(dd.sessions.length>4){const m=document.createElement("div");m.className="more";m.textContent="+"+(dd.sessions.length-4);cell.appendChild(m)}
@@ -626,6 +632,37 @@ function renderCal(){
     root.appendChild(wkEl);
     cur=addDays(cur,7);
   }
+  setupCalDrag(root);
+}
+
+/* ===== drag & drop（カレンダー：日をまたいだ移動・並べ替え） ===== */
+let calSortables=[], lastDragAt=0;
+function setupCalDrag(root){
+  calSortables.forEach(s=>{try{s.destroy()}catch(e){}});calSortables=[];
+  if(typeof Sortable==="undefined")return;
+  root.querySelectorAll(".day").forEach(cell=>{
+    calSortables.push(new Sortable(cell,{
+      group:"sess",draggable:".chip2",animation:150,
+      delay:180,delayOnTouchOnly:true,touchStartThreshold:6,
+      filter:".dnum,.more",preventOnFilter:false,
+      ghostClass:"sortghost",chosenClass:"sortchosen",
+      onEnd:onSessDrop
+    }));
+  });
+}
+function onSessDrop(evt){
+  lastDragAt=Date.now();
+  const sid=evt.item.dataset.sid;
+  const fromDs=evt.from.dataset.ds, toDs=evt.to.dataset.ds;
+  if(!sid||!fromDs||!toDs)return;
+  const fd=dayOf(fromDs);if(!fd)return;
+  const s=fd.sessions.find(x=>x.id===sid);if(!s)return;
+  fd.sessions=fd.sessions.filter(x=>x!==s);
+  const tgt=ensureDay(toDs);
+  const idx=Math.min(evt.newIndex!=null?evt.newIndex:tgt.sessions.length,tgt.sessions.length);
+  tgt.sessions.splice(idx,0,s);
+  cleanDay(fromDs);
+  change();
 }
 
 /* ===== day sheet ===== */
@@ -801,12 +838,14 @@ function renderTpl(){
       const grid=document.createElement("div");grid.className="wkgrid";
       for(let di=0;di<7;di++){
         const cell=document.createElement("div");cell.className="wkday";
+        cell.dataset.wi=wi;cell.dataset.di=di;
         const dw=document.createElement("div");dw.className="wkdow";dw.textContent=DOWS[di];
         cell.appendChild(dw);
         (wk.days[di]||[]).forEach((mid,ii)=>{
           const m=masterById(mid);
           if(!m)return;
           const c=document.createElement("div");c.className="tchip "+CATCLS[m.cat];
+          c.dataset.ai=ii;
           const nm=document.createElement("span");nm.textContent=m.cat==="休養"?"rest":m.name;
           const x=document.createElement("button");x.textContent="×";x.setAttribute("aria-label","外す");
           x.addEventListener("click",e=>{e.stopPropagation();wk.days[di].splice(ii,1);change()});
@@ -847,6 +886,7 @@ function renderTpl(){
     p1.appendChild(ex);
   }
   root.appendChild(p1);
+  setupTplDrag(p1);
 
   /* --- 負荷マスタ panel --- */
   const p2=document.createElement("div");p2.className="panel";
@@ -895,6 +935,35 @@ function renderTpl(){
   am.addEventListener("click",()=>{state.master.push({id:id(),name:"新規メニュー",cat:"筋トレ",rpe:7,min:60});change()});
   p2.appendChild(am);
   root.appendChild(p2);
+}
+/* テンプレ編集グリッドのD&D */
+let tplSortables=[];
+function setupTplDrag(root){
+  tplSortables.forEach(s=>{try{s.destroy()}catch(e){}});tplSortables=[];
+  if(typeof Sortable==="undefined")return;
+  root.querySelectorAll(".wkday").forEach(cell=>{
+    tplSortables.push(new Sortable(cell,{
+      group:"tplc",draggable:".tchip",animation:150,
+      delay:180,delayOnTouchOnly:true,touchStartThreshold:6,
+      filter:".wkdow,.addchip",preventOnFilter:false,
+      ghostClass:"sortghost",chosenClass:"sortchosen",
+      onEnd:onTplDrop
+    }));
+  });
+}
+function onTplDrop(evt){
+  const tpl=state.templates.find(t=>t.id===curTplId);
+  if(!tpl)return;
+  const fw=+evt.from.dataset.wi, fd=+evt.from.dataset.di;
+  const tw=+evt.to.dataset.wi, td=+evt.to.dataset.di;
+  const ai=+evt.item.dataset.ai;
+  const src=tpl.weeks[fw]&&tpl.weeks[fw].days[fd];
+  if(!src||isNaN(ai)||ai>=src.length)return;
+  const mid=src.splice(ai,1)[0];
+  const dst=tpl.weeks[tw].days[td];
+  const ni=Math.min(evt.newIndex!=null?evt.newIndex:dst.length,dst.length);
+  dst.splice(ni,0,mid);
+  change();
 }
 function syncSessNames(m){
   Object.values(state.days).forEach(d=>d.sessions.forEach(s=>{if(s.mid===m.id)s.name=m.name}));
