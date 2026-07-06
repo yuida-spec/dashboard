@@ -58,37 +58,11 @@ header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px s
 .eyebrow{font-size:10px;letter-spacing:.32em;color:var(--mut);font-weight:500}
 .mdate{font-family:var(--serif);font-weight:700;font-size:19px;letter-spacing:.05em;white-space:nowrap}
 header .grow{flex:1}
-.chips{display:flex;gap:12px;align-items:center}
-.chip{font-size:12px;color:var(--mut);display:flex;align-items:center;gap:5px;white-space:nowrap}
-.chip::before{content:"";width:8px;height:8px;border-radius:50%;flex:none}
-.chip.red::before{background:var(--red)}
-.chip.amber::before{background:var(--amber)}
-.chip.green::before{background:var(--green)}
-.chip.gray::before{background:var(--gray);opacity:.55}
-.chip b{font-family:var(--mono);font-weight:500;color:var(--ink)}
-.chip.gray b{color:var(--mut)}
 .status{font-size:11px;color:var(--mut);display:flex;align-items:center;gap:4px;white-space:nowrap}
 .status::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gray)}
 .status.dirty::before{background:var(--amber)}.status.ok::before{background:var(--green)}.status.err::before{background:var(--red)}
 .iconbtn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;min-height:36px;min-width:36px;padding:0 11px;font-size:13px;transition:border-color .15s}
 .iconbtn:hover{border-color:var(--mut)}
-
-/* ---- today ---- */
-#todaybar{margin:16px 18px 0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
-#todaybar::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red)}
-#todaybar .tbh{font-size:12px;font-weight:700;color:var(--ink);letter-spacing:.14em;display:flex;align-items:center;gap:7px}
-#todaybar .tbh::before{content:"★";color:var(--red);font-size:11px}
-#todaybar ul{margin:4px 0 0;padding:0;list-style:none}
-#todaybar li{display:flex;align-items:center;gap:9px;padding:8px 0;border-top:1px solid var(--line);font-size:14px;cursor:pointer;min-height:42px}
-#todaybar li:first-child{border-top:none;margin-top:2px}
-#todaybar .tstar{color:var(--red);flex:none;font-size:12px}
-#todaybar .tproj{color:var(--red);flex:none;font-size:11px}
-#todaybar li.proj .ttl2{font-weight:700}
-#todaybar .ttl2{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#todaybar .from{font-size:11px;color:var(--mut);border:1px solid var(--line);padding:1px 9px;border-radius:20px;white-space:nowrap;flex:none}
-#todaybar .d{font-family:var(--mono);font-size:11.5px;color:var(--mut);white-space:nowrap;flex:none}
-#todaybar .d.over{color:var(--red);font-weight:500}
-#todaybar .none{color:var(--mut);font-size:13.5px;padding:6px 0 2px}
 
 /* ---- board ---- */
 #board{display:flex;gap:26px;padding:20px 18px calc(48px + env(safe-area-inset-bottom));overflow-x:auto;align-items:flex-start}
@@ -107,18 +81,16 @@ header .grow{flex:1}
 .cardlist:empty::after{content:"ここにドラッグ、または下から追加";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--mut);opacity:.7;letter-spacing:.05em}
 
 /* ---- card ---- */
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 13px 9px;margin-bottom:12px;box-shadow:var(--shadow);transition:box-shadow .18s ease-out,transform .18s ease-out,opacity .25s,filter .25s;position:relative;border-top:3px solid var(--gray)}
-.card.green{border-top-color:var(--green)}.card.amber{border-top-color:var(--amber)}.card.red{border-top-color:var(--red)}.card.gray{border-top-color:var(--gray)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 13px 9px;margin-bottom:12px;box-shadow:var(--shadow);transition:box-shadow .18s ease-out,transform .18s ease-out,opacity .25s,filter .25s;position:relative}
 @media(hover:hover){.card:hover{box-shadow:var(--shadow-lift);transform:translateY(-1px)}}
 .card{touch-action:pan-y}
-.card.off{opacity:.5;filter:grayscale(.9);border-top-color:var(--line);background:transparent;box-shadow:none}
+.card.todayon{border:2px solid var(--red);border-top:4px solid var(--red);box-shadow:var(--shadow-lift)}
+.todaychip{flex:none;background:var(--red);color:#FFF;font-size:10px;font-weight:700;letter-spacing:.14em;padding:2px 9px;border-radius:20px;user-select:none}
+.card.off{opacity:.5;filter:grayscale(.9);border-color:var(--line);border-top-width:1px;background:transparent;box-shadow:none}
 @media(hover:hover){.card.off:hover{transform:none;box-shadow:none}}
 .cardhead{display:flex;align-items:center;gap:6px}
 .mname{flex:1;font-size:14.5px;font-weight:700;outline:none;border-radius:6px;padding:4px;min-width:0;letter-spacing:.01em}
 .mname:focus{background:var(--bg)}
-.pill{font-size:10.5px;padding:3px 10px;border-radius:20px;white-space:nowrap;user-select:none;border:1px solid;background:transparent;font-weight:500;letter-spacing:.08em}
-.card.green .pill{color:var(--green)}.card.amber .pill{color:var(--amber)}.card.red .pill{color:var(--red)}.card.gray .pill{color:var(--gray)}
-.card.off .pill{display:none}
 .switch{flex:none;width:30px;height:18px;border-radius:20px;border:none;background:var(--ink);position:relative;padding:0;transition:background .2s}
 .switch::after{content:"";position:absolute;top:2px;left:14px;width:14px;height:14px;border-radius:50%;background:var(--card);transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
 .off .switch{background:var(--graybg)}
@@ -187,8 +159,6 @@ header .grow{flex:1}
 @media(max-width:640px){
   header{padding-left:14px;padding-right:12px}
   .mdate{font-size:17px}
-  .chips{order:5;width:100%;margin-top:4px;gap:14px}
-  #todaybar{margin:12px 12px 0}
   #board{flex-direction:column;overflow-x:visible;gap:30px;padding:18px 12px calc(48px + env(safe-area-inset-bottom))}
   .col{width:100%;flex:none}
   .addcol{flex:none;width:100%}
@@ -230,13 +200,11 @@ header .grow{flex:1}
     <span class="mdate" id="hdrDate"></span>
   </div>
   <span class="grow"></span>
-  <span class="chips" id="chips"></span>
   <span class="status" id="status"></span>
   <button class="iconbtn" id="refreshBtn" title="最新を取得" aria-label="最新を取得">&#8635;</button>
   <button class="iconbtn" id="settingsBtn" aria-label="設定">設定</button>
 </header>
 
-<div id="todaybar" class="hidden"></div>
 <div id="board" class="hidden"></div>
 <input type="date" id="dueInput" tabindex="-1" aria-hidden="true">
 
@@ -262,8 +230,6 @@ header .grow{flex:1}
 const REPO="yuida-spec/dashboard";
 const API="https://api.github.com/repos/"+REPO;
 const ITER=150000;
-const STATUSES=["green","amber","red","gray"];
-const SLABEL={green:"順調",amber:"詰まり",red:"要対応",gray:"様子見"};
 
 function id(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3)}
 function $(s){return document.querySelector(s)}
@@ -358,96 +324,6 @@ function change(){render();markDirty()}
 function visibleCols(){return state.columns.filter(c=>!c.archived)}
 function isHiddenCol(col){return col.archived||col.off}
 
-/* ===== today bar & chips ===== */
-function collectPriorities(){
-  const items=[];
-  state.columns.forEach(col=>{
-    if(isHiddenCol(col))return;
-    col.cards.forEach(card=>{
-      if(card.archived||card.off)return;
-      card.todos.forEach(td=>{
-        if(td.done)return;
-        const c=dueCmp(td.due);
-        if(td.pri||c===-1||c===0)items.push({card,td,over:c===-1});
-      });
-    });
-  });
-  items.sort((x,y)=>{
-    const dx=x.td.due?dueCmp(x.td.due):2, dy=y.td.due?dueCmp(y.td.due):2;
-    return dx-dy;
-  });
-  return items;
-}
-function collectTodayProjects(){
-  const items=[];
-  state.columns.forEach(col=>{
-    if(isHiddenCol(col))return;
-    col.cards.forEach(card=>{
-      if(card.archived||card.off)return;
-      if(isTodayFlag(card.today))items.push({card,col});
-    });
-  });
-  return items;
-}
-function jumpToCard(cardId){
-  const el=document.querySelector('.card[data-id="'+cardId+'"]');
-  if(el){el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")}
-}
-function renderToday(){
-  const bar=$("#todaybar");bar.innerHTML="";
-  const projs=collectTodayProjects();
-  const todos=collectPriorities();
-  const h=document.createElement("div");h.className="tbh";h.textContent="今日やること";bar.appendChild(h);
-  if(!projs.length&&!todos.length){
-    const p=document.createElement("div");p.className="none";p.textContent="最優先・期限切れなし。良い一日を。";bar.appendChild(p);return;
-  }
-  const ul=document.createElement("ul");
-  let shown=0;const CAP=9;
-  projs.forEach(it=>{
-    if(shown>=CAP)return;shown++;
-    const li=document.createElement("li");li.className="proj";
-    const s=document.createElement("span");s.className="tproj";s.textContent="◆";
-    const t=document.createElement("span");t.className="ttl2";t.textContent=it.card.name;
-    const f=document.createElement("span");f.className="from";f.textContent=it.col.name;
-    li.append(s,t,f);
-    li.addEventListener("click",()=>jumpToCard(it.card.id));
-    ul.appendChild(li);
-  });
-  todos.forEach(it=>{
-    if(shown>=CAP)return;shown++;
-    const li=document.createElement("li");
-    const s=document.createElement("span");s.className="tstar";s.textContent="★";
-    const t=document.createElement("span");t.className="ttl2";t.textContent=it.td.text||"（無題）";
-    const f=document.createElement("span");f.className="from";f.textContent=it.card.name;
-    li.append(s,t,f);
-    if(it.td.due){const d=document.createElement("span");d.className="d"+(it.over?" over":"");d.textContent=dueLabel(it.td.due);li.appendChild(d)}
-    li.addEventListener("click",()=>jumpToCard(it.card.id));
-    ul.appendChild(li);
-  });
-  bar.appendChild(ul);
-  const rest=projs.length+todos.length-shown;
-  if(rest>0){const m=document.createElement("div");m.className="none";m.textContent="ほか "+rest+" 件";bar.appendChild(m)}
-}
-function renderChips(){
-  const counts={red:0,amber:0,green:0,gray:0};
-  let off=0;
-  state.columns.forEach(col=>{
-    if(col.archived)return;
-    col.cards.forEach(card=>{
-      if(card.archived)return;
-      if(col.off||card.off){off++}else{counts[card.status]++}
-    });
-  });
-  const el=$("#chips");el.innerHTML="";
-  [["red","要対応"],["amber","詰まり"],["green","順調"]].forEach(([k,label])=>{
-    if(!counts[k])return;
-    const s=document.createElement("span");s.className="chip "+k;
-    s.innerHTML=label+" <b>"+counts[k]+"</b>";
-    el.appendChild(s);
-  });
-  if(off){const s=document.createElement("span");s.className="chip gray";s.innerHTML="休止 <b>"+off+"</b>";el.appendChild(s)}
-}
-
 /* ===== confirm bars ===== */
 function confirmBar(question,onYes,onNo){
   const bar=document.createElement("div");bar.className="confirmbar";
@@ -468,7 +344,7 @@ function eltodo(td,card){
   const flag=document.createElement("button");flag.className="flag"+(td.pri?" on":"");flag.textContent="★";flag.title="最優先";flag.setAttribute("aria-label","最優先");
   flag.addEventListener("click",()=>{td.pri=!td.pri;change()});
   const tx=document.createElement("span");tx.className="ttext";tx.contentEditable=true;tx.spellcheck=false;tx.textContent=td.text;
-  tx.addEventListener("blur",e=>{td.text=e.target.textContent.trim();markDirty();renderToday()});
+  tx.addEventListener("blur",e=>{td.text=e.target.textContent.trim();markDirty()});
   tx.addEventListener("keydown",e=>{
     if(e.key==="Enter"){e.preventDefault();
       td.text=tx.textContent.trim();
@@ -487,13 +363,12 @@ function eltodo(td,card){
   return li;
 }
 function elcard(card,col){
-  const div=document.createElement("div");div.className="card "+(card.off?"off":card.status);div.dataset.id=card.id;
+  const todayOn=isTodayFlag(card.today)&&!card.off&&!col.off;
+  const div=document.createElement("div");div.className="card"+(card.off?" off":"")+(todayOn?" todayon":"");div.dataset.id=card.id;
   const head=document.createElement("div");head.className="cardhead";
-  head.innerHTML='<span class="mname" contenteditable spellcheck="false"></span><button class="pill"></button><button class="switch" role="switch"></button><button class="xbtn" title="削除" aria-label="カードを削除">&times;</button>';
+  head.innerHTML=(todayOn?'<span class="todaychip">今日</span>':'')+'<span class="mname" contenteditable spellcheck="false"></span><button class="switch" role="switch"></button><button class="xbtn" title="削除" aria-label="カードを削除">&times;</button>';
   const mn=head.querySelector(".mname");mn.textContent=card.name;
-  mn.addEventListener("blur",e=>{card.name=e.target.textContent.trim()||"無題";markDirty();renderToday()});
-  const pill=head.querySelector(".pill");pill.textContent=SLABEL[card.status];pill.title="タップで状態を切替";
-  pill.addEventListener("click",()=>{if(card.off)return;card.status=STATUSES[(STATUSES.indexOf(card.status)+1)%4];change()});
+  mn.addEventListener("blur",e=>{card.name=e.target.textContent.trim()||"無題";markDirty()});
   const sw=head.querySelector(".switch");
   sw.title=card.off?"もう一度押すとアーカイブ確認":"休止する（今はほっとく）";
   sw.setAttribute("aria-checked",card.off?"false":"true");
@@ -599,8 +474,6 @@ function render(){
   const addcol=document.createElement("button");addcol.className="addcol";addcol.textContent="＋ 大カテゴリ";
   addcol.addEventListener("click",()=>{state.columns.push({id:id(),name:"新規カテゴリ",cards:[]});change()});
   board.appendChild(addcol);
-  renderToday();
-  renderChips();
   setupDrag();
 }
 
@@ -640,7 +513,7 @@ function setupDrag(){
   document.querySelectorAll(".cardlist").forEach(list=>{
     cardSortables.push(new Sortable(list,{group:"cards",draggable:".card",animation:150,
       delay:180,delayOnTouchOnly:true,touchStartThreshold:6,
-      filter:".ttext,.mname,input,button,.pill,.due,.flag,.tdx,.xbtn,.addtodo,.donetoggle,.switch,.todaybtn,.cbyes,.cbno",preventOnFilter:false,
+      filter:".ttext,.mname,input,button,.due,.flag,.tdx,.xbtn,.addtodo,.donetoggle,.switch,.todaybtn,.cbyes,.cbno",preventOnFilter:false,
       ghostClass:"sortghost",chosenClass:"sortchosen",onEnd:syncFromDOM}));
   });
 }
@@ -735,7 +608,6 @@ async function doUnlock(vault){
   }catch(e){err.textContent="エラー: "+e.message;$("#unlockBtn").disabled=false;return}
   $("#lock").classList.add("hidden");
   $("#hdr").classList.remove("hidden");
-  $("#todaybar").classList.remove("hidden");
   $("#board").classList.remove("hidden");
   render();
   setStatus("保存済み","ok");
