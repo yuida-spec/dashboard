@@ -19,6 +19,7 @@
   --red:#BE3D2C;--redbg:#F7E4E0;--amber:#9C7A14;--amberbg:#F4ECD3;
   --green:#2F7D4F;--greenbg:#DFEFE3;--gray:#8A8578;--graybg:#EDEBE3;
   --blue:#3E5F8A;--bluebg:#E2E9F2;
+  --car:#8A5CB0;--carbg:#ECE3F4;
   --sans:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic UI",sans-serif;
   --serif:"Zen Old Mincho","Hiragino Mincho ProN",serif;
   --mono:"IBM Plex Mono",ui-monospace,monospace;
@@ -30,6 +31,7 @@
   --red:#DD6B57;--redbg:#42221D;--amber:#C9A23F;--amberbg:#3A3115;
   --green:#63B383;--greenbg:#1D3526;--gray:#8F8B80;--graybg:#2E2C27;
   --blue:#7FA3D0;--bluebg:#25303E;
+  --car:#B492D8;--carbg:#2E2540;
   --shadow:0 1px 2px rgba(0,0,0,.25),0 2px 8px rgba(0,0,0,.2);
   --shadow-lift:0 2px 4px rgba(0,0,0,.3),0 8px 20px rgba(0,0,0,.35);
 }}
@@ -89,7 +91,7 @@ header .grow{flex:1}
 .legend{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
 .lg{font-size:11px;color:var(--mut);display:flex;align-items:center;gap:4px}
 .lg::before{content:"";width:8px;height:8px;border-radius:2px}
-.lg.c-str::before{background:var(--red)}.lg.c-wl::before{background:var(--blue)}.lg.c-con::before{background:var(--green)}.lg.c-rest::before{background:var(--gray)}
+.lg.c-str::before{background:var(--red)}.lg.c-wl::before{background:var(--blue)}.lg.c-car::before{background:var(--car)}.lg.c-con::before{background:var(--green)}.lg.c-rest::before{background:var(--gray)}
 .dowrow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
 .dow{text-align:center;font-size:11px;color:var(--mut);font-weight:500;letter-spacing:.1em}
 .dow.sat{color:var(--blue)}.dow.sun{color:var(--red)}
@@ -105,7 +107,7 @@ header .grow{flex:1}
 .sortchosen{box-shadow:var(--shadow-lift);opacity:.95}
 .day.dragover{border-color:var(--mut);background:var(--graybg)}
 .chip2.c-str{border-left-color:var(--red)}.chip2.c-wl{border-left-color:var(--blue)}
-.chip2.c-con{border-left-color:var(--green)}.chip2.c-rest{border-left-color:var(--gray);color:var(--mut)}
+.chip2.c-car{border-left-color:var(--car)}.chip2.c-con{border-left-color:var(--green)}.chip2.c-rest{border-left-color:var(--gray);color:var(--mut)}
 .chip2.done{color:var(--mut);background:transparent}
 .chip2.done::before{content:"✓ ";color:var(--green);font-weight:700}
 .more{font-size:9.5px;color:var(--mut);padding:0 4px}
@@ -142,7 +144,7 @@ input[type=number]{width:64px;font-family:var(--mono)}
 .tchip button{border:none;background:none;color:var(--mut);font-size:11px;padding:1px 3px;opacity:.5;flex:none}
 .tchip button:hover{opacity:1;color:var(--red)}
 .tchip.c-str{border-left-color:var(--red)}.tchip.c-wl{border-left-color:var(--blue)}
-.tchip.c-con{border-left-color:var(--green)}.tchip.c-rest{border-left-color:var(--gray);color:var(--mut)}
+.tchip.c-car{border-left-color:var(--car)}.tchip.c-con{border-left-color:var(--green)}.tchip.c-rest{border-left-color:var(--gray);color:var(--mut)}
 .addchip{border:1px dashed var(--line);background:none;color:var(--mut);border-radius:5px;font-size:11px;min-height:24px;margin-top:auto}
 .addchip:hover{color:var(--ink);border-color:var(--mut)}
 table.mst{width:100%;border-collapse:collapse;font-size:13.5px}
@@ -154,7 +156,7 @@ table.mst select{height:34px}
 table.mst .au{font-family:var(--mono);font-size:12px;color:var(--mut);white-space:nowrap}
 .caty{font-size:10.5px;padding:2px 8px;border-radius:12px;white-space:nowrap}
 .caty.c-str{background:var(--redbg);color:var(--red)}.caty.c-wl{background:var(--bluebg);color:var(--blue)}
-.caty.c-con{background:var(--greenbg);color:var(--green)}.caty.c-rest{background:var(--graybg);color:var(--gray)}
+.caty.c-car{background:var(--carbg);color:var(--car)}.caty.c-con{background:var(--greenbg);color:var(--green)}.caty.c-rest{background:var(--graybg);color:var(--gray)}
 
 /* ---- load view ---- */
 #viewLoad{padding:16px 14px calc(60px + env(safe-area-inset-bottom));max-width:1080px;margin:0 auto}
@@ -233,7 +235,7 @@ table.wk td:first-child{text-align:left;font-family:var(--sans)}
 .srow .snm{flex:1;min-width:0;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .srow.done .snm{color:var(--mut);text-decoration:line-through}
 .srow .dotc{width:9px;height:9px;border-radius:3px;flex:none}
-.dotc.c-str{background:var(--red)}.dotc.c-wl{background:var(--blue)}.dotc.c-con{background:var(--green)}.dotc.c-rest{background:var(--gray)}
+.dotc.c-str{background:var(--red)}.dotc.c-wl{background:var(--blue)}.dotc.c-car{background:var(--car)}.dotc.c-con{background:var(--green)}.dotc.c-rest{background:var(--gray)}
 .srow input[type=number]{width:54px;height:36px;font-size:14px}
 .srow .x2{border:none;background:none;color:var(--mut);opacity:.45;font-size:15px;padding:8px 6px}
 .srow .x2:hover{opacity:1;color:var(--red)}
@@ -360,8 +362,8 @@ const VAULT="vault-training.json";
 const ITER=150000;
 const DEMO=new URLSearchParams(location.search).has("demo");
 
-const CATS=["筋トレ","WL","コンディショニング","休養"];
-const CATCLS={"筋トレ":"c-str","WL":"c-wl","コンディショニング":"c-con","休養":"c-rest"};
+const CATS=["筋トレ","WL","カーディオ","コンディショニング","休養"];
+const CATCLS={"筋トレ":"c-str","WL":"c-wl","カーディオ":"c-car","コンディショニング":"c-con","休養":"c-rest"};
 const DOWS=["月","火","水","木","金","土","日"];
 
 function id(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3)}
@@ -388,6 +390,8 @@ function defaultData(){
     M("m-sn","Snatch","WL",7,60),
     M("m-cjh","C&J（Heavy）","WL",8,75),
     M("m-snh","Snatch（Heavy）","WL",8,75),
+    M("m-run","ランニング","カーディオ",5,30),
+    M("m-bike","バイク/ローイング","カーディオ",5,30),
     M("m-pil","Pilates","コンディショニング",4,45),
     M("m-yoga","Yoga","コンディショニング",3,45),
     M("m-rest","休養日","休養",0,0)
@@ -652,7 +656,7 @@ function buildSeries(){
 }
 function weekStats(monYmd){
   const today=ymd(new Date());
-  let plan=0,done=0,ton=0,top=0;const cnt={"筋トレ":0,"WL":0,"コンディショニング":0,"休養":0};
+  let plan=0,done=0,ton=0,top=0;const cnt={"筋トレ":0,"WL":0,"カーディオ":0,"コンディショニング":0,"休養":0};
   const daily=[];
   for(let i=0;i<7;i++){
     const ds=ymd(addDays(parseYmd(monYmd),i));
@@ -742,7 +746,7 @@ function renderCal(){
   now.addEventListener("click",()=>{const n=new Date();calY=n.getFullYear();calM=n.getMonth();render()});
   const ttl=document.createElement("span");ttl.className="calttl";ttl.textContent=calY+"年"+(calM+1)+"月";
   const lg=document.createElement("span");lg.className="legend";
-  [["c-str","筋トレ"],["c-wl","WL"],["c-con","コンディショニング"],["c-rest","休養"]].forEach(([c,l])=>{
+  [["c-str","筋トレ"],["c-wl","WL"],["c-car","カーディオ"],["c-con","コンディショニング"],["c-rest","休養"]].forEach(([c,l])=>{
     const s=document.createElement("span");s.className="lg "+c;s.textContent=l;lg.appendChild(s);
   });
   bar.append(prev,ttl,next,now,lg);
@@ -788,6 +792,7 @@ function renderCal(){
     const parts=[];
     if(st.cnt["筋トレ"])parts.push("筋"+st.cnt["筋トレ"]);
     if(st.cnt["WL"])parts.push("WL"+st.cnt["WL"]);
+    if(st.cnt["カーディオ"])parts.push("有"+st.cnt["カーディオ"]);
     if(st.cnt["コンディショニング"])parts.push("コ"+st.cnt["コンディショニング"]);
     if(st.cnt["休養"])parts.push("休"+st.cnt["休養"]);
     const t1=document.createElement("span");t1.innerHTML=parts.length?parts.join("・"):"—";
@@ -1422,7 +1427,7 @@ function weeklyTable(){
   box.innerHTML="<h3>週次サマリ <span class='sub'>直近6週＋今後2週</span></h3>";
   const monNow=mondayOf(new Date());
   const tb=document.createElement("table");tb.className="wk";
-  tb.innerHTML="<thead><tr><th>週</th><th>筋</th><th>WL</th><th>コ</th><th>休</th><th>AU計画</th><th>AU実施</th><th>トン数</th><th>トップ%</th><th>単調性</th><th>ストレイン</th></tr></thead>";
+  tb.innerHTML="<thead><tr><th>週</th><th>筋</th><th>WL</th><th>有</th><th>コ</th><th>休</th><th>AU計画</th><th>AU実施</th><th>トン数</th><th>トップ%</th><th>単調性</th><th>ストレイン</th></tr></thead>";
   const tbody=document.createElement("tbody");
   for(let i=-5;i<=2;i++){
     const mon=ymd(addDays(monNow,i*7));
@@ -1430,7 +1435,7 @@ function weeklyTable(){
     if(!st.plan&&i>0)continue;
     const tr=document.createElement("tr");
     const mCls=st.mono>2.5?"w-danger":st.mono>2?"w-warn":"";
-    tr.innerHTML="<td>"+mdLabel(mon)+"週"+(i===0?" ←今週":"")+"</td><td>"+(st.cnt["筋トレ"]||"")+"</td><td>"+(st.cnt["WL"]||"")+"</td><td>"+(st.cnt["コンディショニング"]||"")+"</td><td>"+(st.cnt["休養"]||"")+"</td><td>"+fmtN(st.plan)+"</td><td>"+fmtN(st.done)+"</td><td>"+(st.ton?fmtN(st.ton):"—")+"</td><td>"+(st.top?Math.round(st.top)+"%":"—")+"</td><td class='"+mCls+"'>"+(st.mono?st.mono.toFixed(2):"—")+"</td><td>"+fmtN(st.strain)+"</td>";
+    tr.innerHTML="<td>"+mdLabel(mon)+"週"+(i===0?" ←今週":"")+"</td><td>"+(st.cnt["筋トレ"]||"")+"</td><td>"+(st.cnt["WL"]||"")+"</td><td>"+(st.cnt["カーディオ"]||"")+"</td><td>"+(st.cnt["コンディショニング"]||"")+"</td><td>"+(st.cnt["休養"]||"")+"</td><td>"+fmtN(st.plan)+"</td><td>"+fmtN(st.done)+"</td><td>"+(st.ton?fmtN(st.ton):"—")+"</td><td>"+(st.top?Math.round(st.top)+"%":"—")+"</td><td class='"+mCls+"'>"+(st.mono?st.mono.toFixed(2):"—")+"</td><td>"+fmtN(st.strain)+"</td>";
     tbody.appendChild(tr);
   }
   tb.appendChild(tbody);
