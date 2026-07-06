@@ -20,6 +20,7 @@
   --green:#2F7D4F;--greenbg:#DFEFE3;--gray:#8A8578;--graybg:#EDEBE3;
   --blue:#3E5F8A;--bluebg:#E2E9F2;
   --car:#8A5CB0;--carbg:#ECE3F4;
+  --teal:#2E7D74;--pink:#B85C7E;
   --sans:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic UI",sans-serif;
   --serif:"Zen Old Mincho","Hiragino Mincho ProN",serif;
   --mono:"IBM Plex Mono",ui-monospace,monospace;
@@ -32,6 +33,7 @@
   --green:#63B383;--greenbg:#1D3526;--gray:#8F8B80;--graybg:#2E2C27;
   --blue:#7FA3D0;--bluebg:#25303E;
   --car:#B492D8;--carbg:#2E2540;
+  --teal:#6FBFB5;--pink:#D98BA6;
   --shadow:0 1px 2px rgba(0,0,0,.25),0 2px 8px rgba(0,0,0,.2);
   --shadow-lift:0 2px 4px rgba(0,0,0,.3),0 8px 20px rgba(0,0,0,.35);
 }}
@@ -90,8 +92,7 @@ header .grow{flex:1}
 .navb{border:1px solid var(--line);background:var(--card);border-radius:9px;min-width:38px;min-height:36px;font-size:14px;color:var(--ink)}
 .legend{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
 .lg{font-size:11px;color:var(--mut);display:flex;align-items:center;gap:4px}
-.lg::before{content:"";width:8px;height:8px;border-radius:2px}
-.lg.c-str::before{background:var(--red)}.lg.c-wl::before{background:var(--blue)}.lg.c-car::before{background:var(--car)}.lg.c-con::before{background:var(--green)}.lg.c-rest::before{background:var(--gray)}
+.lg i{width:8px;height:8px;border-radius:2px;display:inline-block}
 .dowrow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
 .dow{text-align:center;font-size:11px;color:var(--mut);font-weight:500;letter-spacing:.1em}
 .dow.sat{color:var(--blue)}.dow.sun{color:var(--red)}
@@ -106,8 +107,6 @@ header .grow{flex:1}
 .sortghost{opacity:.3}
 .sortchosen{box-shadow:var(--shadow-lift);opacity:.95}
 .day.dragover{border-color:var(--mut);background:var(--graybg)}
-.chip2.c-str{border-left-color:var(--red)}.chip2.c-wl{border-left-color:var(--blue)}
-.chip2.c-car{border-left-color:var(--car)}.chip2.c-con{border-left-color:var(--green)}.chip2.c-rest{border-left-color:var(--gray);color:var(--mut)}
 .chip2.done{color:var(--mut);background:transparent}
 .chip2.done::before{content:"✓ ";color:var(--green);font-weight:700}
 .more{font-size:9.5px;color:var(--mut);padding:0 4px}
@@ -143,8 +142,6 @@ input[type=number]{width:64px;font-family:var(--mono)}
 .tchip span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tchip button{border:none;background:none;color:var(--mut);font-size:11px;padding:1px 3px;opacity:.5;flex:none}
 .tchip button:hover{opacity:1;color:var(--red)}
-.tchip.c-str{border-left-color:var(--red)}.tchip.c-wl{border-left-color:var(--blue)}
-.tchip.c-car{border-left-color:var(--car)}.tchip.c-con{border-left-color:var(--green)}.tchip.c-rest{border-left-color:var(--gray);color:var(--mut)}
 .addchip{border:1px dashed var(--line);background:none;color:var(--mut);border-radius:5px;font-size:11px;min-height:24px;margin-top:auto}
 .addchip:hover{color:var(--ink);border-color:var(--mut)}
 table.mst{width:100%;border-collapse:collapse;font-size:13.5px}
@@ -234,8 +231,7 @@ table.wk td:first-child{text-align:left;font-family:var(--sans)}
 .srow .ck2{flex:none;width:22px;height:22px;accent-color:var(--green);cursor:pointer}
 .srow .snm{flex:1;min-width:0;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .srow.done .snm{color:var(--mut);text-decoration:line-through}
-.srow .dotc{width:9px;height:9px;border-radius:3px;flex:none}
-.dotc.c-str{background:var(--red)}.dotc.c-wl{background:var(--blue)}.dotc.c-car{background:var(--car)}.dotc.c-con{background:var(--green)}.dotc.c-rest{background:var(--gray)}
+.dotc{width:9px;height:9px;border-radius:3px;flex:none;display:inline-block}
 .srow input[type=number]{width:54px;height:36px;font-size:14px}
 .srow .x2{border:none;background:none;color:var(--mut);opacity:.45;font-size:15px;padding:8px 6px}
 .srow .x2:hover{opacity:1;color:var(--red)}
@@ -362,8 +358,18 @@ const VAULT="vault-training.json";
 const ITER=150000;
 const DEMO=new URLSearchParams(location.search).has("demo");
 
-const CATS=["筋トレ","WL","カーディオ","コンディショニング","休養"];
-const CATCLS={"筋トレ":"c-str","WL":"c-wl","カーディオ":"c-car","コンディショニング":"c-con","休養":"c-rest"};
+const PALETTE=[["red","朱"],["blue","藍"],["car","紫"],["green","緑"],["amber","金"],["teal","青緑"],["pink","桃"],["gray","灰"]];
+function defaultCats(){return [
+  {name:"筋トレ",color:"red",short:"筋"},
+  {name:"WL",color:"blue",short:"WL"},
+  {name:"カーディオ",color:"car",short:"有"},
+  {name:"コンディショニング",color:"green",short:"コ"},
+  {name:"休養",color:"gray",short:"休",rest:true}
+]}
+function catInfo(n){return ((state&&state.cats)||[]).find(c=>c.name===n)}
+function catVar(n){const c=catInfo(n);return "var(--"+((c&&c.color)||"gray")+")"}
+function catShort(n){const c=catInfo(n);return (c&&c.short)||String(n||"").slice(0,1)}
+function isRest(n){const c=catInfo(n);return c?!!c.rest:n==="休養"}
 const DOWS=["月","火","水","木","金","土","日"];
 
 function id(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3)}
@@ -375,7 +381,7 @@ function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
 function mondayOf(d){const x=new Date(d);x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
 function mdLabel(s){const p=s.split("-");return (+p[1])+"/"+(+p[2])}
 function fmtN(n){return Math.round(n).toLocaleString("ja-JP")}
-function sessAU(s){return s.cat==="休養"?0:Math.max(0,(+s.rpe||0)*(+s.min||0))}
+function sessAU(s){return isRest(s.cat)?0:Math.max(0,(+s.rpe||0)*(+s.min||0))}
 
 /* ===== default data ===== */
 function defaultData(){
@@ -402,7 +408,7 @@ function defaultData(){
     {label:"Week 3（抜く）",days:[["m-sq"],["m-mp","m-cj"],["m-sn"],["m-bp","m-pil"],["m-cjh"],["m-rest"],["m-rest"]]},
     {label:"Week 4（抜く）",days:[["m-sq"],["m-mp","m-sn"],["m-cj","m-yoga"],["m-bp","m-pil"],["m-snh"],["m-rest"],["m-rest"]]}
   ]};
-  return {master,templates:[tpl],days:{},settings:{},routine:null,profile:defaultProfile()};
+  return {master,templates:[tpl],days:{},settings:{},routine:null,profile:defaultProfile(),cats:defaultCats()};
 }
 function defaultProfile(){
   const L=(lid,name)=>({id:lid,name,log:[]});
@@ -656,7 +662,7 @@ function buildSeries(){
 }
 function weekStats(monYmd){
   const today=ymd(new Date());
-  let plan=0,done=0,ton=0,top=0;const cnt={"筋トレ":0,"WL":0,"カーディオ":0,"コンディショニング":0,"休養":0};
+  let plan=0,done=0,ton=0,top=0;const cnt={};
   const daily=[];
   for(let i=0;i<7;i++){
     const ds=ymd(addDays(parseYmd(monYmd),i));
@@ -725,11 +731,11 @@ function renderCal(){
       const li=document.createElement("li");if(s.done)li.className="done";
       const ck=document.createElement("input");ck.type="checkbox";ck.className="ck2";ck.checked=!!s.done;ck.setAttribute("aria-label","完了");
       ck.addEventListener("change",()=>{const ss=matS(today,s.id);if(ss)ss.done=ck.checked;change()});
-      const dot=document.createElement("span");dot.className="dotc "+CATCLS[s.cat];
+      const dot=document.createElement("span");dot.className="dotc";dot.style.background=catVar(s.cat);
       const nm=document.createElement("span");nm.className="snm";nm.textContent=s.name;
       nm.style.cursor="pointer";nm.addEventListener("click",()=>openDay(today));
       const au=document.createElement("span");au.className="sau";
-      au.textContent=s.cat==="休養"?"rest":("RPE"+s.rpe+"×"+s.min+"分 = "+fmtN(sessAU(s))+"AU");
+      au.textContent=isRest(s.cat)?"rest":("RPE"+s.rpe+"×"+s.min+"分 = "+fmtN(sessAU(s))+"AU");
       li.append(ck,dot,nm,au);ul.appendChild(li);
     });
     tc.appendChild(ul);
@@ -746,8 +752,10 @@ function renderCal(){
   now.addEventListener("click",()=>{const n=new Date();calY=n.getFullYear();calM=n.getMonth();render()});
   const ttl=document.createElement("span");ttl.className="calttl";ttl.textContent=calY+"年"+(calM+1)+"月";
   const lg=document.createElement("span");lg.className="legend";
-  [["c-str","筋トレ"],["c-wl","WL"],["c-car","カーディオ"],["c-con","コンディショニング"],["c-rest","休養"]].forEach(([c,l])=>{
-    const s=document.createElement("span");s.className="lg "+c;s.textContent=l;lg.appendChild(s);
+  state.cats.forEach(c=>{
+    const s=document.createElement("span");s.className="lg";
+    const i=document.createElement("i");i.style.background="var(--"+c.color+")";
+    s.append(i,document.createTextNode(c.name));lg.appendChild(s);
   });
   bar.append(prev,ttl,next,now,lg);
   root.appendChild(bar);
@@ -776,8 +784,10 @@ function renderCal(){
       if(dd&&dd.sessions.length){
         const show=dd.sessions.slice(0,4);
         show.forEach(s=>{
-          const c=document.createElement("div");c.className="chip2 "+CATCLS[s.cat]+(s.done?" done":"");
-          c.textContent=s.cat==="休養"?"rest":s.name;
+          const c=document.createElement("div");c.className="chip2"+(s.done?" done":"");
+          c.style.borderLeftColor=catVar(s.cat);
+          if(isRest(s.cat)){c.style.color="var(--mut)";c.textContent="rest"}
+          else c.textContent=s.name;
           c.dataset.sid=s.id;
           cell.appendChild(c);
         });
@@ -790,11 +800,8 @@ function renderCal(){
     const st=weekStats(monY);
     const ws=document.createElement("div");ws.className="wsum";
     const parts=[];
-    if(st.cnt["筋トレ"])parts.push("筋"+st.cnt["筋トレ"]);
-    if(st.cnt["WL"])parts.push("WL"+st.cnt["WL"]);
-    if(st.cnt["カーディオ"])parts.push("有"+st.cnt["カーディオ"]);
-    if(st.cnt["コンディショニング"])parts.push("コ"+st.cnt["コンディショニング"]);
-    if(st.cnt["休養"])parts.push("休"+st.cnt["休養"]);
+    state.cats.forEach(c=>{if(st.cnt[c.name])parts.push(catShort(c.name)+st.cnt[c.name])});
+    Object.keys(st.cnt).forEach(n=>{if(!catInfo(n)&&st.cnt[n])parts.push(catShort(n)+st.cnt[n])});
     const t1=document.createElement("span");t1.innerHTML=parts.length?parts.join("・"):"—";
     const t2=document.createElement("span");
     t2.innerHTML="AU <b>"+fmtN(st.done)+"</b>/"+fmtN(st.plan);
@@ -865,10 +872,10 @@ function renderSheet(){
       const row=document.createElement("div");row.className="srow"+(s.done?" done":"");
       const ck=document.createElement("input");ck.type="checkbox";ck.className="ck2";ck.checked=!!s.done;ck.setAttribute("aria-label","完了");
       ck.addEventListener("change",()=>{const ss=matS(ds,s.id);if(ss)ss.done=ck.checked;change()});
-      const dot=document.createElement("span");dot.className="dotc "+CATCLS[s.cat];
+      const dot=document.createElement("span");dot.className="dotc";dot.style.background=catVar(s.cat);
       const nm=document.createElement("span");nm.className="snm";nm.textContent=s.name;
       row.append(ck,dot,nm);
-      if(s.cat!=="休養"){
+      if(!isRest(s.cat)){
         const rp=document.createElement("input");rp.type="number";rp.min=0;rp.max=10;rp.step=.5;rp.value=s.rpe;rp.title="RPE";rp.setAttribute("aria-label","RPE");
         rp.addEventListener("change",()=>{const ss=matS(ds,s.id);if(ss)ss.rpe=+rp.value||0;change()});
         const mn=document.createElement("input");mn.type="number";mn.min=0;mn.max=300;mn.step=5;mn.value=s.min;mn.title="分";mn.setAttribute("aria-label","分");
@@ -882,7 +889,7 @@ function renderSheet(){
       x.addEventListener("click",()=>{const sd=materializeDay(ds);sd.sessions=sd.sessions.filter(t=>t.id!==s.id);sd.ov=1;cleanDay(ds);change()});
       row.append(mv,x);
       body.appendChild(row);
-      if(s.cat!=="休養")renderWorkUI(body,ds,s);
+      if(!isRest(s.cat))renderWorkUI(body,ds,s);
     });
   }else{
     const p=document.createElement("div");p.style.cssText="color:var(--mut);font-size:13.5px;padding:8px 0";p.textContent="この日の予定はありません。";
@@ -1007,16 +1014,17 @@ $("#mvInput").addEventListener("change",()=>{const v=$("#mvInput").value;if(v&&m
 /* ===== master picker ===== */
 function renderPicker(body){
   $("#sheetTtl").textContent="メニューを選択";
-  CATS.forEach(cat=>{
+  state.cats.forEach(cc=>{
+    const cat=cc.name;
     const items=state.master.filter(m=>m.cat===cat);
     if(!items.length)return;
     const g=document.createElement("div");g.className="pgroup";g.textContent=cat;body.appendChild(g);
     items.forEach(m=>{
       const b=document.createElement("button");b.className="pitem";
-      const dot=document.createElement("span");dot.className="dotc "+CATCLS[m.cat];
+      const dot=document.createElement("span");dot.className="dotc";dot.style.background=catVar(m.cat);
       const nm=document.createElement("span");nm.textContent=m.name;
       const au=document.createElement("span");au.className="aulab";
-      au.textContent=m.cat==="休養"?"":("RPE"+m.rpe+"×"+m.min+"分");
+      au.textContent=isRest(m.cat)?"":("RPE"+m.rpe+"×"+m.min+"分");
       b.append(dot,nm,au);
       b.addEventListener("click",()=>pickMaster(m));
       body.appendChild(b);
@@ -1102,9 +1110,11 @@ function renderTpl(){
         (wk.days[di]||[]).forEach((mid,ii)=>{
           const m=masterById(mid);
           if(!m)return;
-          const c=document.createElement("div");c.className="tchip "+CATCLS[m.cat];
+          const c=document.createElement("div");c.className="tchip";
+          c.style.borderLeftColor=catVar(m.cat);
+          if(isRest(m.cat))c.style.color="var(--mut)";
           c.dataset.ai=ii;
-          const nm=document.createElement("span");nm.textContent=m.cat==="休養"?"rest":m.name;
+          const nm=document.createElement("span");nm.textContent=isRest(m.cat)?"rest":m.name;
           const x=document.createElement("button");x.textContent="×";x.setAttribute("aria-label","外す");
           x.addEventListener("click",e=>{e.stopPropagation();wk.days[di].splice(ii,1);change()});
           c.append(nm,x);cell.appendChild(c);
@@ -1175,7 +1185,8 @@ function renderTpl(){
     td1.appendChild(ni);
     const td2=document.createElement("td");
     const cs=document.createElement("select");
-    CATS.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;o.selected=m.cat===c;cs.appendChild(o)});
+    state.cats.forEach(cc=>{const o=document.createElement("option");o.value=cc.name;o.textContent=cc.name;o.selected=m.cat===cc.name;cs.appendChild(o)});
+    if(!catInfo(m.cat)){const o=document.createElement("option");o.value=m.cat;o.textContent=m.cat+"（削除済）";o.selected=true;cs.appendChild(o)}
     cs.addEventListener("change",()=>{m.cat=cs.value;markDirty();renderTpl()});
     td2.appendChild(cs);
     const td3=document.createElement("td");
@@ -1186,7 +1197,7 @@ function renderTpl(){
     const mi=document.createElement("input");mi.type="number";mi.min=0;mi.max=300;mi.step=5;mi.value=m.min;
     mi.addEventListener("change",()=>{m.min=+mi.value||0;markDirty();renderTpl()});
     td4.appendChild(mi);
-    const td5=document.createElement("td");td5.className="au";td5.textContent=m.cat==="休養"?"—":fmtN((+m.rpe||0)*(+m.min||0));
+    const td5=document.createElement("td");td5.className="au";td5.textContent=isRest(m.cat)?"—":fmtN((+m.rpe||0)*(+m.min||0));
     const td6=document.createElement("td");
     const x=document.createElement("button");x.className="x2";x.textContent="×";x.setAttribute("aria-label","削除");
     x.style.cssText="border:none;background:none;color:var(--mut);font-size:15px;padding:6px";
@@ -1204,9 +1215,57 @@ function renderTpl(){
   tb.appendChild(tbody);
   p2.appendChild(tb);
   const am=document.createElement("button");am.className="smallbtn";am.style.marginTop="12px";am.textContent="＋ メニューを追加";
-  am.addEventListener("click",()=>{state.master.push({id:id(),name:"新規メニュー",cat:"筋トレ",rpe:7,min:60});change()});
+  am.addEventListener("click",()=>{state.master.push({id:id(),name:"新規メニュー",cat:state.cats[0].name,rpe:7,min:60});change()});
   p2.appendChild(am);
   root.appendChild(p2);
+
+  /* --- カテゴリ panel --- */
+  const p3=document.createElement("div");p3.className="panel";
+  const h3=document.createElement("h2");h3.innerHTML="カテゴリ <span class='sub'>自由に追加・色分け（例: 脚の日／胸の日）。名前の変更は過去の記録にも一括反映されます</span>";
+  p3.appendChild(h3);
+  state.cats.forEach(c=>{
+    const row=document.createElement("div");row.className="rowflex";row.style.marginBottom="6px";
+    const dot=document.createElement("span");dot.className="dotc";
+    dot.style.cssText="width:12px;height:12px;border-radius:3px;background:var(--"+c.color+")";
+    const cs=document.createElement("select");cs.title="色";
+    PALETTE.forEach(([k,l])=>{const o=document.createElement("option");o.value=k;o.textContent=l;o.selected=c.color===k;cs.appendChild(o)});
+    cs.addEventListener("change",()=>{c.color=cs.value;change()});
+    const ni=document.createElement("input");ni.type="text";ni.value=c.name;ni.style.width="160px";ni.setAttribute("aria-label","カテゴリ名");
+    ni.addEventListener("change",()=>{
+      const nn=ni.value.trim();
+      if(!nn||nn===c.name){ni.value=c.name;return}
+      if(catInfo(nn)){alert("同名のカテゴリがあります。");ni.value=c.name;return}
+      renameCat(c.name,nn);c.name=nn;change();
+    });
+    const sh=document.createElement("input");sh.type="text";sh.value=catShort(c.name);sh.maxLength=2;sh.style.width="52px";sh.title="週サマリでの略記（1〜2文字）";sh.setAttribute("aria-label","略記");
+    sh.addEventListener("change",()=>{c.short=sh.value.trim()||undefined;change()});
+    row.append(dot,cs,ni,sh);
+    if(!c.rest){
+      const x=document.createElement("button");x.className="smallbtn warn";x.textContent="×";x.title="カテゴリを削除";
+      x.addEventListener("click",()=>{
+        if(state.master.some(m=>m.cat===c.name)){alert("メニュー・マスタで使用中のため削除できません。先にメニューのカテゴリを変更してください。");return}
+        if(confirm("カテゴリ「"+c.name+"」を削除しますか？")){state.cats=state.cats.filter(x2=>x2!==c);change()}
+      });
+      row.appendChild(x);
+    }
+    p3.appendChild(row);
+  });
+  const ac=document.createElement("button");ac.className="smallbtn";ac.textContent="＋ カテゴリを追加";
+  ac.addEventListener("click",()=>{
+    const n=prompt("カテゴリ名（例: 脚の日）");
+    if(!n||!n.trim())return;
+    if(catInfo(n.trim())){alert("同名のカテゴリがあります。");return}
+    const used=state.cats.map(c=>c.color);
+    const free=PALETTE.map(p=>p[0]).find(k=>!used.includes(k))||"amber";
+    state.cats.push({name:n.trim(),color:free});change();
+  });
+  p3.appendChild(ac);
+  root.appendChild(p3);
+}
+/* カテゴリ改名：メニュー・マスタと全日付の記録を一括更新 */
+function renameCat(oldN,newN){
+  state.master.forEach(m=>{if(m.cat===oldN)m.cat=newN});
+  Object.values(state.days).forEach(d=>d.sessions.forEach(s=>{if(s.cat===oldN)s.cat=newN}));
 }
 /* テンプレ編集グリッドのD&D */
 let tplSortables=[];
@@ -1427,7 +1486,8 @@ function weeklyTable(){
   box.innerHTML="<h3>週次サマリ <span class='sub'>直近6週＋今後2週</span></h3>";
   const monNow=mondayOf(new Date());
   const tb=document.createElement("table");tb.className="wk";
-  tb.innerHTML="<thead><tr><th>週</th><th>筋</th><th>WL</th><th>有</th><th>コ</th><th>休</th><th>AU計画</th><th>AU実施</th><th>トン数</th><th>トップ%</th><th>単調性</th><th>ストレイン</th></tr></thead>";
+  const catTh=state.cats.map(c=>"<th>"+catShort(c.name)+"</th>").join("");
+  tb.innerHTML="<thead><tr><th>週</th>"+catTh+"<th>AU計画</th><th>AU実施</th><th>トン数</th><th>トップ%</th><th>単調性</th><th>ストレイン</th></tr></thead>";
   const tbody=document.createElement("tbody");
   for(let i=-5;i<=2;i++){
     const mon=ymd(addDays(monNow,i*7));
@@ -1435,11 +1495,13 @@ function weeklyTable(){
     if(!st.plan&&i>0)continue;
     const tr=document.createElement("tr");
     const mCls=st.mono>2.5?"w-danger":st.mono>2?"w-warn":"";
-    tr.innerHTML="<td>"+mdLabel(mon)+"週"+(i===0?" ←今週":"")+"</td><td>"+(st.cnt["筋トレ"]||"")+"</td><td>"+(st.cnt["WL"]||"")+"</td><td>"+(st.cnt["カーディオ"]||"")+"</td><td>"+(st.cnt["コンディショニング"]||"")+"</td><td>"+(st.cnt["休養"]||"")+"</td><td>"+fmtN(st.plan)+"</td><td>"+fmtN(st.done)+"</td><td>"+(st.ton?fmtN(st.ton):"—")+"</td><td>"+(st.top?Math.round(st.top)+"%":"—")+"</td><td class='"+mCls+"'>"+(st.mono?st.mono.toFixed(2):"—")+"</td><td>"+fmtN(st.strain)+"</td>";
+    const catTd=state.cats.map(c=>"<td>"+(st.cnt[c.name]||"")+"</td>").join("");
+    tr.innerHTML="<td>"+mdLabel(mon)+"週"+(i===0?" ←今週":"")+"</td>"+catTd+"<td>"+fmtN(st.plan)+"</td><td>"+fmtN(st.done)+"</td><td>"+(st.ton?fmtN(st.ton):"—")+"</td><td>"+(st.top?Math.round(st.top)+"%":"—")+"</td><td class='"+mCls+"'>"+(st.mono?st.mono.toFixed(2):"—")+"</td><td>"+fmtN(st.strain)+"</td>";
     tbody.appendChild(tr);
   }
   tb.appendChild(tbody);
-  box.appendChild(tb);
+  const sc=document.createElement("div");sc.style.overflowX="auto";sc.appendChild(tb);
+  box.appendChild(sc);
   return box;
 }
 
@@ -1619,6 +1681,7 @@ async function doUnlock(vault){
       if(!state.profile)state.profile=defaultProfile();
       if(!state.profile.bw)state.profile.bw=[];
       if(!state.profile.lifts)state.profile.lifts=defaultProfile().lifts;
+      if(!state.cats||!state.cats.length)state.cats=defaultCats();
     }
   }catch(e){err.textContent="エラー: "+e.message;$("#unlockBtn").disabled=false;return}
   showApp();
