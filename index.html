@@ -82,6 +82,8 @@ header .grow{flex:1}
 #todaybar li{display:flex;align-items:center;gap:9px;padding:8px 0;border-top:1px solid var(--line);font-size:14px;cursor:pointer;min-height:42px}
 #todaybar li:first-child{border-top:none;margin-top:2px}
 #todaybar .tstar{color:var(--red);flex:none;font-size:12px}
+#todaybar .tproj{color:var(--red);flex:none;font-size:11px}
+#todaybar li.proj .ttl2{font-weight:700}
 #todaybar .ttl2{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #todaybar .from{font-size:11px;color:var(--mut);border:1px solid var(--line);padding:1px 9px;border-radius:20px;white-space:nowrap;flex:none}
 #todaybar .d{font-family:var(--mono);font-size:11.5px;color:var(--mut);white-space:nowrap;flex:none}
@@ -90,11 +92,12 @@ header .grow{flex:1}
 
 /* ---- board ---- */
 #board{display:flex;gap:26px;padding:20px 18px calc(48px + env(safe-area-inset-bottom));overflow-x:auto;align-items:flex-start}
-.col{width:292px;flex:0 0 292px;border-radius:4px}
-.colhead{display:flex;align-items:center;gap:4px;margin:0 0 2px;padding-bottom:7px;border-bottom:1px solid var(--ink)}
+.col{width:292px;flex:0 0 292px;border-radius:4px;transition:opacity .25s,filter .25s}
+.col.off{opacity:.5;filter:grayscale(.9)}
+.colhead{display:flex;align-items:center;gap:5px;margin:0 0 2px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
 .colgrip{cursor:grab;color:var(--mut);opacity:.4;font-size:15px;flex:none;padding:5px 3px;touch-action:none;border-radius:6px}
 .colgrip:active{cursor:grabbing}
-.colname{flex:1;font-size:13px;font-weight:700;color:var(--ink);outline:none;border-radius:5px;padding:3px 4px;min-width:0;letter-spacing:.03em}
+.colname{flex:1;font-family:var(--serif);font-size:16.5px;font-weight:700;color:var(--ink);outline:none;border-radius:5px;padding:3px 4px;min-width:0;letter-spacing:.03em;line-height:1.35}
 .colname:focus{background:var(--card)}
 .ccount{font-family:var(--mono);font-size:11px;color:var(--mut);flex:none;padding:0 2px}
 .xbtn{border:none;background:transparent;color:var(--mut);font-size:15px;line-height:1;padding:7px;border-radius:8px;opacity:.45;flex:none}
@@ -118,11 +121,18 @@ header .grow{flex:1}
 .card.off .pill{display:none}
 .switch{flex:none;width:30px;height:18px;border-radius:20px;border:none;background:var(--ink);position:relative;padding:0;transition:background .2s}
 .switch::after{content:"";position:absolute;top:2px;left:14px;width:14px;height:14px;border-radius:50%;background:var(--card);transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
-.card.off .switch{background:var(--graybg)}
-.card.off .switch::after{left:2px}
-.stamp{position:absolute;top:8px;right:44px;width:34px;height:34px;border:2px solid var(--red);border-radius:50%;color:var(--red);font-family:var(--serif);font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg);opacity:.62;pointer-events:none;filter:none}
+.off .switch{background:var(--graybg)}
+.off .switch::after{left:2px}
+.colhead .switch{filter:none}
+.stamp{position:absolute;top:8px;right:44px;width:34px;height:34px;border:2px solid var(--red);border-radius:50%;color:var(--red);font-family:var(--serif);font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg);opacity:.62;pointer-events:none}
+.stamp.mini{position:static;width:24px;height:24px;font-size:12px;border-width:1.5px;flex:none;margin-right:2px}
 @keyframes stampin{0%{transform:rotate(-8deg) scale(1.6);opacity:0}55%{transform:rotate(-8deg) scale(.94);opacity:.7}100%{transform:rotate(-8deg) scale(1);opacity:.62}}
 .stamp.stampin{animation:stampin .3s ease-out}
+.confirmbar{background:var(--redbg);border-radius:8px;padding:8px 10px;margin-top:9px;font-size:12px;color:var(--red);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.confirmbar .q{font-weight:700;flex:1;min-width:0}
+.cbyes{background:var(--red);color:#FFF;border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:500;min-height:32px}
+.cbno{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:6px 12px;font-size:12px;min-height:32px}
+.colconfirm{margin:10px 0 2px}
 .prog{height:2px;border-radius:1px;background:var(--line);margin:7px 0 3px;overflow:hidden}
 .prog>i{display:block;height:100%;background:var(--green);border-radius:1px;transition:width .25s ease-out}
 .todos{list-style:none;margin:4px 0 0;padding:0}
@@ -142,8 +152,11 @@ header .grow{flex:1}
 .tdx:hover{opacity:1;color:var(--red)}
 .donetoggle{margin-top:4px;font-size:11.5px;color:var(--mut);background:transparent;border:none;padding:5px 4px;border-radius:6px;text-align:left}
 .donetoggle:hover{background:var(--bg)}
-.addtodo{margin-top:4px;font-size:12.5px;color:var(--mut);background:transparent;border:none;border-radius:8px;padding:7px 4px;width:100%;min-height:38px;text-align:left;transition:color .15s}
+.cardfoot{display:flex;gap:6px;align-items:center;margin-top:4px}
+.addtodo{flex:1;font-size:12.5px;color:var(--mut);background:transparent;border:none;border-radius:8px;padding:7px 4px;min-height:38px;text-align:left;transition:color .15s}
 .addtodo:hover{color:var(--ink)}
+.todaybtn{flex:none;font-size:11.5px;border:1px solid var(--line);border-radius:20px;padding:5px 12px;background:transparent;color:var(--mut);white-space:nowrap;min-height:32px;transition:color .15s,border-color .15s,background .15s}
+.todaybtn.on{border-color:var(--red);color:var(--red);background:var(--redbg);font-weight:500}
 .addcard{width:100%;margin-top:0;font-size:12.5px;color:var(--mut);background:transparent;border:none;border-radius:8px;padding:9px 4px;text-align:left;min-height:40px;transition:color .15s}
 .addcard:hover{color:var(--ink)}
 .addcol{flex:0 0 220px;background:transparent;border:1px dashed var(--line);border-radius:10px;color:var(--mut);font-size:13px;padding:14px;min-height:52px;letter-spacing:.05em}
@@ -154,12 +167,20 @@ header .grow{flex:1}
 
 /* ---- modal ---- */
 #modal{position:fixed;inset:0;background:rgba(24,23,20,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60}
-.modalbox{width:100%;max-width:400px;background:var(--card);border-radius:14px;padding:22px;box-shadow:var(--shadow-lift)}
+.modalbox{width:100%;max-width:400px;background:var(--card);border-radius:14px;padding:22px;box-shadow:var(--shadow-lift);max-height:86dvh;overflow-y:auto}
 .modalbox h2{font-family:var(--serif);font-size:17px;margin:0 0 12px;letter-spacing:.04em}
+.modalbox h3{font-size:12px;color:var(--mut);margin:18px 0 4px;font-weight:700;letter-spacing:.1em}
 .modalbox label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
 .modalbox input{width:100%;height:44px;padding:0 12px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-family:var(--sans)}
 .modalbox .row{display:flex;gap:8px;margin-top:16px}
 .modalbox .row .btn{margin-top:0}
+.archrow{display:flex;align-items:center;gap:8px;font-size:13px;padding:8px 0;border-top:1px solid var(--line)}
+.archrow:first-child{border-top:none}
+.archname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.archtag{font-size:10.5px;color:var(--mut);border:1px solid var(--line);border-radius:20px;padding:1px 8px;white-space:nowrap;flex:none}
+.restore{border:1px solid var(--line);background:transparent;border-radius:7px;padding:5px 11px;font-size:12px;color:var(--ink);min-height:32px;flex:none}
+.restore:hover{border-color:var(--mut)}
+.archnone{font-size:12.5px;color:var(--mut);padding:6px 0}
 #dueInput{position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;left:-9999px}
 
 /* ---- mobile ---- */
@@ -168,9 +189,10 @@ header .grow{flex:1}
   .mdate{font-size:17px}
   .chips{order:5;width:100%;margin-top:4px;gap:14px}
   #todaybar{margin:12px 12px 0}
-  #board{flex-direction:column;overflow-x:visible;gap:26px;padding:18px 12px calc(48px + env(safe-area-inset-bottom))}
+  #board{flex-direction:column;overflow-x:visible;gap:30px;padding:18px 12px calc(48px + env(safe-area-inset-bottom))}
   .col{width:100%;flex:none}
   .addcol{flex:none;width:100%}
+  .colname{font-size:18px}
   .mname{font-size:16px}
   .ttext{font-size:16px}
   .td{min-height:44px}
@@ -225,6 +247,8 @@ header .grow{flex:1}
     <input id="mToken" type="password" placeholder="変更しない場合は空のまま">
     <label>合言葉を変更（新しい合言葉。空なら変更なし）</label>
     <input id="mPass" type="password" placeholder="変更しない場合は空のまま">
+    <h3>アーカイブ</h3>
+    <div id="archList"></div>
     <div class="row">
       <button class="btn sub" id="mCancel" style="margin-top:0">閉じる</button>
       <button class="btn" id="mSave">保存</button>
@@ -264,7 +288,7 @@ const DEFAULT_DATA={columns:[
 
 let state=null, KEY=null, TOKEN=null, SALT=null, SHA=null, saveTimer=null, isNew=false;
 const openDone=new Set();
-let justStamped=null;
+let justStamped=null, pendingArchive=null, pendingArchiveCol=null;
 
 /* ===== crypto & sync (unchanged, tested) ===== */
 function bytesToB64(bytes){let s="";for(let i=0;i<bytes.length;i++)s+=String.fromCharCode(bytes[i]);return btoa(s)}
@@ -320,6 +344,7 @@ async function save(){
 
 /* ===== dates ===== */
 function todayMD(){const d=new Date();return [d.getMonth()+1,d.getDate()]}
+function todayStr(){const t=todayMD();return t[0]+"/"+t[1]}
 function dueCmp(due){
   if(!due)return null;const m=due.match(/^(\d{1,2})\/(\d{1,2})$/);if(!m)return null;
   const t=todayMD();const a=(+m[1])*100+(+m[2]);const b=t[0]*100+t[1];
@@ -327,52 +352,92 @@ function dueCmp(due){
 }
 function dueClass(due){const c=dueCmp(due);return c===-1?" over":(c===0?" today":"")}
 function dueLabel(due){const c=dueCmp(due);if(c===-1)return due+" 期限切れ";if(c===0)return due+" 今日";return due}
+function isTodayFlag(v){return v===todayStr()}
 
 function change(){render();markDirty()}
+function visibleCols(){return state.columns.filter(c=>!c.archived)}
+function isHiddenCol(col){return col.archived||col.off}
 
 /* ===== today bar & chips ===== */
 function collectPriorities(){
   const items=[];
-  state.columns.forEach(col=>col.cards.forEach(card=>card.todos.forEach(td=>{
-    if(card.off)return;
-    if(td.done)return;
-    const c=dueCmp(td.due);
-    if(td.pri||c===-1||c===0)items.push({card,td,over:c===-1,today:c===0});
-  })));
+  state.columns.forEach(col=>{
+    if(isHiddenCol(col))return;
+    col.cards.forEach(card=>{
+      if(card.archived||card.off)return;
+      card.todos.forEach(td=>{
+        if(td.done)return;
+        const c=dueCmp(td.due);
+        if(td.pri||c===-1||c===0)items.push({card,td,over:c===-1});
+      });
+    });
+  });
   items.sort((x,y)=>{
     const dx=x.td.due?dueCmp(x.td.due):2, dy=y.td.due?dueCmp(y.td.due):2;
     return dx-dy;
   });
   return items;
 }
+function collectTodayProjects(){
+  const items=[];
+  state.columns.forEach(col=>{
+    if(isHiddenCol(col))return;
+    col.cards.forEach(card=>{
+      if(card.archived||card.off)return;
+      if(isTodayFlag(card.today))items.push({card,col});
+    });
+  });
+  return items;
+}
+function jumpToCard(cardId){
+  const el=document.querySelector('.card[data-id="'+cardId+'"]');
+  if(el){el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")}
+}
 function renderToday(){
   const bar=$("#todaybar");bar.innerHTML="";
-  const items=collectPriorities();
+  const projs=collectTodayProjects();
+  const todos=collectPriorities();
   const h=document.createElement("div");h.className="tbh";h.textContent="今日やること";bar.appendChild(h);
-  if(!items.length){
+  if(!projs.length&&!todos.length){
     const p=document.createElement("div");p.className="none";p.textContent="最優先・期限切れなし。良い一日を。";bar.appendChild(p);return;
   }
   const ul=document.createElement("ul");
-  items.slice(0,7).forEach(it=>{
+  let shown=0;const CAP=9;
+  projs.forEach(it=>{
+    if(shown>=CAP)return;shown++;
+    const li=document.createElement("li");li.className="proj";
+    const s=document.createElement("span");s.className="tproj";s.textContent="◆";
+    const t=document.createElement("span");t.className="ttl2";t.textContent=it.card.name;
+    const f=document.createElement("span");f.className="from";f.textContent=it.col.name;
+    li.append(s,t,f);
+    li.addEventListener("click",()=>jumpToCard(it.card.id));
+    ul.appendChild(li);
+  });
+  todos.forEach(it=>{
+    if(shown>=CAP)return;shown++;
     const li=document.createElement("li");
     const s=document.createElement("span");s.className="tstar";s.textContent="★";
     const t=document.createElement("span");t.className="ttl2";t.textContent=it.td.text||"（無題）";
     const f=document.createElement("span");f.className="from";f.textContent=it.card.name;
     li.append(s,t,f);
     if(it.td.due){const d=document.createElement("span");d.className="d"+(it.over?" over":"");d.textContent=dueLabel(it.td.due);li.appendChild(d)}
-    li.addEventListener("click",()=>{
-      const el=document.querySelector('.card[data-id="'+it.card.id+'"]');
-      if(el){el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")}
-    });
+    li.addEventListener("click",()=>jumpToCard(it.card.id));
     ul.appendChild(li);
   });
   bar.appendChild(ul);
-  if(items.length>7){const m=document.createElement("div");m.className="none";m.textContent="ほか "+(items.length-7)+" 件";bar.appendChild(m)}
+  const rest=projs.length+todos.length-shown;
+  if(rest>0){const m=document.createElement("div");m.className="none";m.textContent="ほか "+rest+" 件";bar.appendChild(m)}
 }
 function renderChips(){
   const counts={red:0,amber:0,green:0,gray:0};
   let off=0;
-  state.columns.forEach(c=>c.cards.forEach(card=>{if(card.off){off++}else{counts[card.status]++}}));
+  state.columns.forEach(col=>{
+    if(col.archived)return;
+    col.cards.forEach(card=>{
+      if(card.archived)return;
+      if(col.off||card.off){off++}else{counts[card.status]++}
+    });
+  });
   const el=$("#chips");el.innerHTML="";
   [["red","要対応"],["amber","詰まり"],["green","順調"]].forEach(([k,label])=>{
     if(!counts[k])return;
@@ -381,6 +446,18 @@ function renderChips(){
     el.appendChild(s);
   });
   if(off){const s=document.createElement("span");s.className="chip gray";s.innerHTML="休止 <b>"+off+"</b>";el.appendChild(s)}
+}
+
+/* ===== confirm bars ===== */
+function confirmBar(question,onYes,onNo){
+  const bar=document.createElement("div");bar.className="confirmbar";
+  const q=document.createElement("span");q.className="q";q.textContent=question;
+  const yes=document.createElement("button");yes.className="cbyes";yes.textContent="アーカイブ";
+  const no=document.createElement("button");no.className="cbno";no.textContent="いいえ、再開";
+  yes.addEventListener("click",onYes);
+  no.addEventListener("click",onNo);
+  bar.append(q,yes,no);
+  return bar;
 }
 
 /* ===== board rendering ===== */
@@ -418,19 +495,25 @@ function elcard(card,col){
   const pill=head.querySelector(".pill");pill.textContent=SLABEL[card.status];pill.title="タップで状態を切替";
   pill.addEventListener("click",()=>{if(card.off)return;card.status=STATUSES[(STATUSES.indexOf(card.status)+1)%4];change()});
   const sw=head.querySelector(".switch");
-  sw.title=card.off?"再開する":"休止する（今はほっとく）";
+  sw.title=card.off?"もう一度押すとアーカイブ確認":"休止する（今はほっとく）";
   sw.setAttribute("aria-checked",card.off?"false":"true");
-  sw.setAttribute("aria-label",card.off?"再開する":"休止する");
+  sw.setAttribute("aria-label",card.off?"アーカイブ確認":"休止する");
   sw.addEventListener("click",()=>{
-    if(!card.off)justStamped=card.id;
-    card.off=!card.off;change();
+    if(!card.off){justStamped=card.id;card.off=true;change();return}
+    if(pendingArchive===card.id){pendingArchive=null;card.off=false;change();return}
+    pendingArchive=card.id;render();
   });
-  head.querySelector(".xbtn").addEventListener("click",()=>{if(confirm("「"+card.name+"」を削除しますか？")){col.cards=col.cards.filter(c=>c!==card);change()}});
+  head.querySelector(".xbtn").addEventListener("click",()=>{if(confirm("「"+card.name+"」を削除しますか？（アーカイブは残りません）")){col.cards=col.cards.filter(c=>c!==card);change()}});
   div.appendChild(head);
   if(card.off){
     const st=document.createElement("span");st.className="stamp";st.textContent="休";st.setAttribute("aria-hidden","true");
     if(justStamped===card.id){st.classList.add("stampin");justStamped=null}
     div.appendChild(st);
+  }
+  if(pendingArchive===card.id){
+    div.appendChild(confirmBar("「"+card.name+"」をアーカイブしますか？",
+      ()=>{card.archived=true;card.off=false;pendingArchive=null;change()},
+      ()=>{card.off=false;pendingArchive=null;change()}));
   }
 
   const total=card.todos.length, done=card.todos.filter(t=>t.done).length;
@@ -457,22 +540,53 @@ function elcard(card,col){
     }
   }
 
+  const foot=document.createElement("div");foot.className="cardfoot";
   const add=document.createElement("button");add.className="addtodo";add.textContent="＋ TODO";
   add.addEventListener("click",()=>{const t={id:id(),text:"",done:false,pri:false,due:""};card.todos.push(t);change();setTimeout(()=>{const e=document.querySelector('[data-tid="'+t.id+'"] .ttext');if(e)e.focus()},30)});
-  div.appendChild(add);
+  foot.appendChild(add);
+  if(!card.off&&!col.off){
+    const on=isTodayFlag(card.today);
+    const tb=document.createElement("button");tb.className="todaybtn"+(on?" on":"");
+    tb.textContent=on?"★ 今日やる":"今日やる";
+    tb.title=on?"今日やることから外す":"今日やること欄に載せる";
+    tb.addEventListener("click",()=>{card.today=on?"":todayStr();change()});
+    foot.appendChild(tb);
+  }
+  div.appendChild(foot);
   return div;
 }
 function elcol(col){
-  const sec=document.createElement("section");sec.className="col";sec.dataset.id=col.id;
+  const sec=document.createElement("section");sec.className="col"+(col.off?" off":"");sec.dataset.id=col.id;
   const head=document.createElement("div");head.className="colhead";
-  head.innerHTML='<span class="colgrip" title="列を移動">&#10303;</span><span class="colname" contenteditable spellcheck="false"></span><span class="ccount"></span><button class="xbtn" title="箱を削除" aria-label="大カテゴリを削除">&times;</button>';
+  head.innerHTML='<span class="colgrip" title="列を移動">&#10303;</span><span class="colname" contenteditable spellcheck="false"></span><span class="ccount"></span><button class="switch" role="switch"></button><button class="xbtn" title="箱を削除" aria-label="大カテゴリを削除">&times;</button>';
   const cn=head.querySelector(".colname");cn.textContent=col.name;
   cn.addEventListener("blur",e=>{col.name=e.target.textContent.trim()||"無題";markDirty()});
-  head.querySelector(".ccount").textContent=col.cards.length;
-  head.querySelector(".xbtn").addEventListener("click",()=>{if(confirm("箱「"+col.name+"」を中身ごと削除しますか？")){state.columns=state.columns.filter(c=>c!==col);change()}});
+  const liveCards=col.cards.filter(c=>!c.archived);
+  head.querySelector(".ccount").textContent=liveCards.length;
+  if(col.off){
+    const st=document.createElement("span");st.className="stamp mini";st.textContent="休";st.setAttribute("aria-hidden","true");
+    head.insertBefore(st,head.querySelector(".switch"));
+  }
+  const sw=head.querySelector(".switch");
+  sw.title=col.off?"もう一度押すとアーカイブ確認":"カテゴリごと休止する";
+  sw.setAttribute("aria-checked",col.off?"false":"true");
+  sw.setAttribute("aria-label",col.off?"アーカイブ確認":"休止する");
+  sw.addEventListener("click",()=>{
+    if(!col.off){col.off=true;change();return}
+    if(pendingArchiveCol===col.id){pendingArchiveCol=null;col.off=false;change();return}
+    pendingArchiveCol=col.id;render();
+  });
+  head.querySelector(".xbtn").addEventListener("click",()=>{if(confirm("箱「"+col.name+"」を中身ごと削除しますか？（アーカイブは残りません）")){state.columns=state.columns.filter(c=>c!==col);change()}});
   sec.appendChild(head);
+  if(pendingArchiveCol===col.id){
+    const cb=confirmBar("「"+col.name+"」を中身ごとアーカイブしますか？",
+      ()=>{col.archived=true;col.off=false;pendingArchiveCol=null;change()},
+      ()=>{col.off=false;pendingArchiveCol=null;change()});
+    cb.classList.add("colconfirm");
+    sec.appendChild(cb);
+  }
   const list=document.createElement("div");list.className="cardlist";list.dataset.col=col.id;
-  col.cards.forEach(card=>list.appendChild(elcard(card,col)));
+  liveCards.forEach(card=>list.appendChild(elcard(card,col)));
   sec.appendChild(list);
   const add=document.createElement("button");add.className="addcard";add.textContent="＋ プロジェクト";
   add.addEventListener("click",()=>{const c={id:id(),name:"新規プロジェクト",status:"gray",todos:[]};col.cards.push(c);change();setTimeout(()=>{const e=document.querySelector('[data-id="'+c.id+'"] .mname');if(e)e.focus()},30)});
@@ -481,7 +595,7 @@ function elcol(col){
 }
 function render(){
   const board=$("#board");board.innerHTML="";
-  state.columns.forEach(col=>board.appendChild(elcol(col)));
+  visibleCols().forEach(col=>board.appendChild(elcol(col)));
   const addcol=document.createElement("button");addcol.className="addcol";addcol.textContent="＋ 大カテゴリ";
   addcol.addEventListener("click",()=>{state.columns.push({id:id(),name:"新規カテゴリ",cards:[]});change()});
   board.appendChild(addcol);
@@ -526,24 +640,55 @@ function setupDrag(){
   document.querySelectorAll(".cardlist").forEach(list=>{
     cardSortables.push(new Sortable(list,{group:"cards",draggable:".card",animation:150,
       delay:180,delayOnTouchOnly:true,touchStartThreshold:6,
-      filter:".ttext,.mname,input,button,.pill,.due,.flag,.tdx,.xbtn,.addtodo,.donetoggle,.switch",preventOnFilter:false,
+      filter:".ttext,.mname,input,button,.pill,.due,.flag,.tdx,.xbtn,.addtodo,.donetoggle,.switch,.todaybtn,.cbyes,.cbno",preventOnFilter:false,
       ghostClass:"sortghost",chosenClass:"sortchosen",onEnd:syncFromDOM}));
   });
 }
 function syncColsFromDOM(){
   const map={};state.columns.forEach(c=>map[c.id]=c);
+  const archived=state.columns.filter(c=>c.archived);
   const order=[...$("#board").querySelectorAll(":scope > .col")].map(el=>map[el.dataset.id]).filter(Boolean);
-  if(order.length===state.columns.length)state.columns=order;
+  if(order.length===visibleCols().length)state.columns=order.concat(archived);
   change();
 }
 function syncFromDOM(){
   const map={};state.columns.forEach(col=>col.cards.forEach(c=>map[c.id]=c));
-  state.columns.forEach(col=>{
+  const archivedByCol=state.columns.map(col=>col.cards.filter(c=>c.archived));
+  state.columns.forEach((col,i)=>{
     const list=document.querySelector('.cardlist[data-col="'+col.id+'"]');
     if(!list)return;
-    col.cards=[...list.querySelectorAll(".card")].map(el=>map[el.dataset.id]).filter(Boolean);
+    col.cards=[...list.querySelectorAll(".card")].map(el=>map[el.dataset.id]).filter(Boolean).concat(archivedByCol[i]);
   });
   change();
+}
+
+/* ===== archive list (settings) ===== */
+function renderArchive(){
+  const box=$("#archList");box.innerHTML="";
+  let any=false;
+  state.columns.forEach(col=>{
+    if(!col.archived)return;
+    any=true;
+    const row=document.createElement("div");row.className="archrow";
+    const nm=document.createElement("span");nm.className="archname";nm.textContent=col.name;
+    const tag=document.createElement("span");tag.className="archtag";tag.textContent="大カテゴリ・"+col.cards.length+"件";
+    const rs=document.createElement("button");rs.className="restore";rs.textContent="復元";
+    rs.addEventListener("click",()=>{col.archived=false;change();renderArchive()});
+    row.append(nm,tag,rs);box.appendChild(row);
+  });
+  state.columns.forEach(col=>{
+    col.cards.forEach(card=>{
+      if(!card.archived)return;
+      any=true;
+      const row=document.createElement("div");row.className="archrow";
+      const nm=document.createElement("span");nm.className="archname";nm.textContent=card.name;
+      const tag=document.createElement("span");tag.className="archtag";tag.textContent=col.name;
+      const rs=document.createElement("button");rs.className="restore";rs.textContent="復元";
+      rs.addEventListener("click",()=>{card.archived=false;if(col.archived)col.archived=false;change();renderArchive()});
+      row.append(nm,tag,rs);box.appendChild(row);
+    });
+  });
+  if(!any){const n=document.createElement("div");n.className="archnone";n.textContent="アーカイブはありません。";box.appendChild(n)}
 }
 
 /* ===== boot ===== */
@@ -601,7 +746,7 @@ $("#refreshBtn").addEventListener("click",async()=>{
   try{const v=await ghGetVault(true);if(v){state=await decStr(KEY,v.data);render();setStatus("最新に更新","ok")}}
   catch(e){setStatus("取得エラー","err")}
 });
-$("#settingsBtn").addEventListener("click",()=>{$("#mToken").value="";$("#mPass").value="";$("#mErr").textContent="";$("#modal").classList.remove("hidden")});
+$("#settingsBtn").addEventListener("click",()=>{$("#mToken").value="";$("#mPass").value="";$("#mErr").textContent="";renderArchive();$("#modal").classList.remove("hidden")});
 $("#mCancel").addEventListener("click",()=>$("#modal").classList.add("hidden"));
 $("#modal").addEventListener("click",e=>{if(e.target.id==="modal")$("#modal").classList.add("hidden")});
 $("#mSave").addEventListener("click",async()=>{
