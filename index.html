@@ -323,6 +323,7 @@ function dueLabel(due){const c=dueCmp(due);if(c===-1)return due+" 期限切れ";
 function isTodayFlag(v){return v===todayStr()}
 
 function change(){render();markDirty()}
+function isEmptyCard(card){return !card.name&&card.todos.every(t=>!(t.text||"").trim())}
 function visibleCols(){return state.columns.filter(c=>!c.archived)}
 function isHiddenCol(col){return col.archived||col.off}
 
@@ -380,7 +381,7 @@ function elcard(card,col){
     if(pendingArchive===card.id){pendingArchive=null;card.off=false;change();return}
     pendingArchive=card.id;render();
   });
-  head.querySelector(".xbtn").addEventListener("click",()=>{if(confirm("「"+(card.name||"無題")+"」を削除しますか？（アーカイブは残りません）")){col.cards=col.cards.filter(c=>c!==card);change()}});
+  head.querySelector(".xbtn").addEventListener("click",()=>{if(isEmptyCard(card)||confirm("「"+(card.name||"無題")+"」を削除しますか？（アーカイブは残りません）")){col.cards=col.cards.filter(c=>c!==card);change()}});
   div.appendChild(head);
   if(card.off){
     const st=document.createElement("span");st.className="stamp";st.textContent="休";st.setAttribute("aria-hidden","true");
@@ -453,7 +454,10 @@ function elcol(col){
     if(pendingArchiveCol===col.id){pendingArchiveCol=null;col.off=false;change();return}
     pendingArchiveCol=col.id;render();
   });
-  head.querySelector(".xbtn").addEventListener("click",()=>{if(confirm("箱「"+(col.name||"無題")+"」を中身ごと削除しますか？（アーカイブは残りません）")){state.columns=state.columns.filter(c=>c!==col);change()}});
+  head.querySelector(".xbtn").addEventListener("click",()=>{
+    const empty=!col.name&&col.cards.every(isEmptyCard);
+    if(empty||confirm("箱「"+(col.name||"無題")+"」を中身ごと削除しますか？（アーカイブは残りません）")){state.columns=state.columns.filter(c=>c!==col);change()}
+  });
   sec.appendChild(head);
   if(pendingArchiveCol===col.id){
     const cb=confirmBar("「"+(col.name||"無題")+"」を中身ごとアーカイブしますか？",
