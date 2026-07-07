@@ -324,6 +324,12 @@ function isTodayFlag(v){return v===todayStr()}
 
 function change(){render();markDirty()}
 function isEmptyCard(card){return !card.name&&card.todos.every(t=>!(t.text||"").trim())}
+function normalize(s){ // 旧「今日やる」(日付文字列 card.today) を持続フラグ card.high へ移行
+  (s.columns||[]).forEach(col=>(col.cards||[]).forEach(card=>{
+    if(card.today!==undefined){if(card.high===undefined)card.high=isTodayFlag(card.today);delete card.today}
+  }));
+  return s;
+}
 function visibleCols(){return state.columns.filter(c=>!c.archived)}
 function isHiddenCol(col){return col.archived||col.off}
 
@@ -366,10 +372,10 @@ function eltodo(td,card){
   return li;
 }
 function elcard(card,col){
-  const todayOn=isTodayFlag(card.today)&&!card.off&&!col.off;
+  const todayOn=!!card.high&&!card.off&&!col.off;
   const div=document.createElement("div");div.className="card"+(card.off?" off":"")+(todayOn?" todayon":"");div.dataset.id=card.id;
   const head=document.createElement("div");head.className="cardhead";
-  head.innerHTML=(todayOn?'<span class="todaychip">今日</span>':'')+'<span class="mname" contenteditable spellcheck="false"></span><button class="switch" role="switch"></button><button class="xbtn" title="削除" aria-label="カードを削除">&times;</button>';
+  head.innerHTML=(todayOn?'<span class="todaychip">HIGH</span>':'')+'<span class="mname" contenteditable spellcheck="false"></span><button class="switch" role="switch"></button><button class="xbtn" title="削除" aria-label="カードを削除">&times;</button>';
   const mn=head.querySelector(".mname");mn.textContent=card.name;
   mn.addEventListener("blur",e=>{card.name=e.target.textContent.trim();if(!card.name)e.target.textContent="";markDirty()});
   const sw=head.querySelector(".switch");
@@ -423,11 +429,11 @@ function elcard(card,col){
   add.addEventListener("click",()=>{const t={id:id(),text:"",done:false,pri:false,due:""};card.todos.push(t);change();setTimeout(()=>{const e=document.querySelector('[data-tid="'+t.id+'"] .ttext');if(e)e.focus()},30)});
   foot.appendChild(add);
   if(!card.off&&!col.off){
-    const on=isTodayFlag(card.today);
+    const on=!!card.high;
     const tb=document.createElement("button");tb.className="todaybtn"+(on?" on":"");
-    tb.textContent=on?"★ 今日やる":"今日やる";
-    tb.title=on?"今日やることから外す":"今日やること欄に載せる";
-    tb.addEventListener("click",()=>{card.today=on?"":todayStr();change()});
+    tb.textContent=on?"★ High":"High";
+    tb.title=on?"Highを外す":"Highにして目立たせる";
+    tb.addEventListener("click",()=>{card.high=!on;change()});
     foot.appendChild(tb);
   }
   div.appendChild(foot);
@@ -608,7 +614,7 @@ async function doUnlock(vault){
     }else{
       SALT=b64ToBytes(vault.salt);
       KEY=await deriveKey(pass,SALT);
-      try{state=await decStr(KEY,vault.data);TOKEN=await decStr(KEY,vault.token);}
+      try{state=normalize(await decStr(KEY,vault.data));TOKEN=await decStr(KEY,vault.token);}
       catch(e){err.textContent="合言葉が違います。";$("#unlockBtn").disabled=false;return}
     }
   }catch(e){err.textContent="エラー: "+e.message;$("#unlockBtn").disabled=false;return}
@@ -621,7 +627,7 @@ async function doUnlock(vault){
 
 $("#refreshBtn").addEventListener("click",async()=>{
   setStatus("取得中…");
-  try{const v=await ghGetVault(true);if(v){state=await decStr(KEY,v.data);render();setStatus("最新に更新","ok")}}
+  try{const v=await ghGetVault(true);if(v){state=normalize(await decStr(KEY,v.data));render();setStatus("最新に更新","ok")}}
   catch(e){setStatus("取得エラー","err")}
 });
 $("#settingsBtn").addEventListener("click",()=>{$("#mToken").value="";$("#mPass").value="";$("#mErr").textContent="";renderArchive();$("#modal").classList.remove("hidden")});
