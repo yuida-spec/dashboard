@@ -73,6 +73,7 @@ header .grow{flex:1}
 .colgrip:active{cursor:grabbing}
 .colname{flex:1;font-family:var(--serif);font-size:16.5px;font-weight:700;color:var(--ink);outline:none;border-radius:5px;padding:3px 4px;min-width:0;letter-spacing:.03em;line-height:1.35}
 .colname:focus{background:var(--card)}
+.colname:empty::before{content:"カテゴリ名を入力";color:var(--mut);opacity:.55;font-weight:400}
 .ccount{font-family:var(--mono);font-size:11px;color:var(--mut);flex:none;padding:0 2px}
 .xbtn{border:none;background:transparent;color:var(--mut);font-size:15px;line-height:1;padding:7px;border-radius:8px;opacity:.45;flex:none}
 .xbtn:hover{opacity:1;color:var(--red)}
@@ -91,6 +92,7 @@ header .grow{flex:1}
 .cardhead{display:flex;align-items:center;gap:6px}
 .mname{flex:1;font-size:14.5px;font-weight:700;outline:none;border-radius:6px;padding:4px;min-width:0;letter-spacing:.01em}
 .mname:focus{background:var(--bg)}
+.mname:empty::before{content:"プロジェクト名を入力";color:var(--mut);opacity:.55;font-weight:400}
 .switch{flex:none;width:30px;height:18px;border-radius:20px;border:none;background:var(--ink);position:relative;padding:0;transition:background .2s}
 .switch::after{content:"";position:absolute;top:2px;left:14px;width:14px;height:14px;border-radius:50%;background:var(--card);transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
 .off .switch{background:var(--graybg)}
@@ -368,7 +370,7 @@ function elcard(card,col){
   const head=document.createElement("div");head.className="cardhead";
   head.innerHTML=(todayOn?'<span class="todaychip">今日</span>':'')+'<span class="mname" contenteditable spellcheck="false"></span><button class="switch" role="switch"></button><button class="xbtn" title="削除" aria-label="カードを削除">&times;</button>';
   const mn=head.querySelector(".mname");mn.textContent=card.name;
-  mn.addEventListener("blur",e=>{card.name=e.target.textContent.trim()||"無題";markDirty()});
+  mn.addEventListener("blur",e=>{card.name=e.target.textContent.trim();if(!card.name)e.target.textContent="";markDirty()});
   const sw=head.querySelector(".switch");
   sw.title=card.off?"もう一度押すとアーカイブ確認":"休止する（今はほっとく）";
   sw.setAttribute("aria-checked",card.off?"false":"true");
@@ -378,7 +380,7 @@ function elcard(card,col){
     if(pendingArchive===card.id){pendingArchive=null;card.off=false;change();return}
     pendingArchive=card.id;render();
   });
-  head.querySelector(".xbtn").addEventListener("click",()=>{if(confirm("「"+card.name+"」を削除しますか？（アーカイブは残りません）")){col.cards=col.cards.filter(c=>c!==card);change()}});
+  head.querySelector(".xbtn").addEventListener("click",()=>{if(confirm("「"+(card.name||"無題")+"」を削除しますか？（アーカイブは残りません）")){col.cards=col.cards.filter(c=>c!==card);change()}});
   div.appendChild(head);
   if(card.off){
     const st=document.createElement("span");st.className="stamp";st.textContent="休";st.setAttribute("aria-hidden","true");
@@ -386,7 +388,7 @@ function elcard(card,col){
     div.appendChild(st);
   }
   if(pendingArchive===card.id){
-    div.appendChild(confirmBar("「"+card.name+"」をアーカイブしますか？",
+    div.appendChild(confirmBar("「"+(card.name||"無題")+"」をアーカイブしますか？",
       ()=>{card.archived=true;card.off=false;pendingArchive=null;change()},
       ()=>{card.off=false;pendingArchive=null;change()}));
   }
@@ -435,7 +437,7 @@ function elcol(col){
   const head=document.createElement("div");head.className="colhead";
   head.innerHTML='<span class="colgrip" title="列を移動">&#10303;</span><span class="colname" contenteditable spellcheck="false"></span><span class="ccount"></span><button class="switch" role="switch"></button><button class="xbtn" title="箱を削除" aria-label="大カテゴリを削除">&times;</button>';
   const cn=head.querySelector(".colname");cn.textContent=col.name;
-  cn.addEventListener("blur",e=>{col.name=e.target.textContent.trim()||"無題";markDirty()});
+  cn.addEventListener("blur",e=>{col.name=e.target.textContent.trim();if(!col.name)e.target.textContent="";markDirty()});
   const liveCards=col.cards.filter(c=>!c.archived);
   head.querySelector(".ccount").textContent=liveCards.length;
   if(col.off){
@@ -451,10 +453,10 @@ function elcol(col){
     if(pendingArchiveCol===col.id){pendingArchiveCol=null;col.off=false;change();return}
     pendingArchiveCol=col.id;render();
   });
-  head.querySelector(".xbtn").addEventListener("click",()=>{if(confirm("箱「"+col.name+"」を中身ごと削除しますか？（アーカイブは残りません）")){state.columns=state.columns.filter(c=>c!==col);change()}});
+  head.querySelector(".xbtn").addEventListener("click",()=>{if(confirm("箱「"+(col.name||"無題")+"」を中身ごと削除しますか？（アーカイブは残りません）")){state.columns=state.columns.filter(c=>c!==col);change()}});
   sec.appendChild(head);
   if(pendingArchiveCol===col.id){
-    const cb=confirmBar("「"+col.name+"」を中身ごとアーカイブしますか？",
+    const cb=confirmBar("「"+(col.name||"無題")+"」を中身ごとアーカイブしますか？",
       ()=>{col.archived=true;col.off=false;pendingArchiveCol=null;change()},
       ()=>{col.off=false;pendingArchiveCol=null;change()});
     cb.classList.add("colconfirm");
@@ -464,7 +466,7 @@ function elcol(col){
   liveCards.forEach(card=>list.appendChild(elcard(card,col)));
   sec.appendChild(list);
   const add=document.createElement("button");add.className="addcard";add.textContent="＋ プロジェクト";
-  add.addEventListener("click",()=>{const c={id:id(),name:"新規プロジェクト",status:"gray",todos:[]};col.cards.push(c);change();setTimeout(()=>{const e=document.querySelector('[data-id="'+c.id+'"] .mname');if(e)e.focus()},30)});
+  add.addEventListener("click",()=>{const c={id:id(),name:"",status:"gray",todos:[]};col.cards.push(c);change();setTimeout(()=>{const e=document.querySelector('[data-id="'+c.id+'"] .mname');if(e)e.focus()},30)});
   sec.appendChild(add);
   return sec;
 }
@@ -472,7 +474,7 @@ function render(){
   const board=$("#board");board.innerHTML="";
   visibleCols().forEach(col=>board.appendChild(elcol(col)));
   const addcol=document.createElement("button");addcol.className="addcol";addcol.textContent="＋ 大カテゴリ";
-  addcol.addEventListener("click",()=>{state.columns.push({id:id(),name:"新規カテゴリ",cards:[]});change()});
+  addcol.addEventListener("click",()=>{const c={id:id(),name:"",cards:[]};state.columns.push(c);change();setTimeout(()=>{const e=document.querySelector('.col[data-id="'+c.id+'"] .colname');if(e)e.focus()},30)});
   board.appendChild(addcol);
   setupDrag();
 }
@@ -543,7 +545,7 @@ function renderArchive(){
     if(!col.archived)return;
     any=true;
     const row=document.createElement("div");row.className="archrow";
-    const nm=document.createElement("span");nm.className="archname";nm.textContent=col.name;
+    const nm=document.createElement("span");nm.className="archname";nm.textContent=col.name||"（無題）";
     const tag=document.createElement("span");tag.className="archtag";tag.textContent="大カテゴリ・"+col.cards.length+"件";
     const rs=document.createElement("button");rs.className="restore";rs.textContent="復元";
     rs.addEventListener("click",()=>{col.archived=false;change();renderArchive()});
@@ -554,8 +556,8 @@ function renderArchive(){
       if(!card.archived)return;
       any=true;
       const row=document.createElement("div");row.className="archrow";
-      const nm=document.createElement("span");nm.className="archname";nm.textContent=card.name;
-      const tag=document.createElement("span");tag.className="archtag";tag.textContent=col.name;
+      const nm=document.createElement("span");nm.className="archname";nm.textContent=card.name||"（無題）";
+      const tag=document.createElement("span");tag.className="archtag";tag.textContent=col.name||"（無題）";
       const rs=document.createElement("button");rs.className="restore";rs.textContent="復元";
       rs.addEventListener("click",()=>{card.archived=false;if(col.archived)col.archived=false;change();renderArchive()});
       row.append(nm,tag,rs);box.appendChild(row);
